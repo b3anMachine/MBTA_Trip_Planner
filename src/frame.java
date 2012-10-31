@@ -7,13 +7,10 @@
  
 //Create a simple GUI window
  public class frame {
-
 	 public static void createWindow() {
-		 
 		 //Create and set up the window.
 		 JFrame frame = new JFrame("MBTA Trip Planner"); 
 		 frame.setBackground(Color.DARK_GRAY);
-		 
 		 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
 		 
 		 //define all labels
@@ -88,8 +85,8 @@
 		 //frame.pack(); 
 		 
 		 frame.setSize(1100,600);
-			 
 	 }
+	 
 	 //loads an image from url to a jlabel
 	 public static void createImage(JLabel label, String url){
 		 try 
@@ -111,9 +108,8 @@
 		   //Display a message if something goes wrong
 		   JOptionPane.showMessageDialog( null, e.toString() );
 		 }
-
-	
 	 }
+	 
 	 //returns a new internal jframe without a toolbar
 	 private static JInternalFrame newFrame(){
 		 JInternalFrame frame = new JInternalFrame("",false,false,false,false);
@@ -164,7 +160,6 @@
 		 container.add(table.getTableHeader(), BorderLayout.PAGE_START);
 		 container.add(table);		    
 	 }
-
 	 
 	 public static void main(String[] args) {		 
 		 createWindow();

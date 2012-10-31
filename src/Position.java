@@ -1,34 +1,59 @@
-// Position class used to contain train position information
-//
+/** 
+ * Position class used to contain train position information 
+ * */
 public class Position {
-
-	private int pos_time;
-	private float pos_lat;
-	private float pos_long;
-	private int pos_heading;
 	
-	public Position(int time, float current_lat, float current_long, int heading) {
-		pos_time = time;
-		pos_lat = current_lat;
-		pos_long = current_long;
-		pos_heading = heading;
+	// Keys for accessing values in JSON files
+	private static final String TIMESTAMP_KEY = "Timestamp";
+	//private static final String TRAIN_KEY = "Train";
+	private static final String LAT_KEY = "Lat";
+	private static final String LONG_KEY = "Long";
+	private static final String HEADING_KEY = "Heading";
+	
+	// Timestamp of last update
+	private int timestamp;
+	// Latitude of train
+	private double latitude;
+	// Longitude of train
+	private double longitude;
+	// Heading of train
+	private int heading;
+	
+	// Position constructor
+	public Position(Object posObj) {
+		// Get timestamp
+		Object timeObj = TripPlanner.getFromMap(posObj, TIMESTAMP_KEY);
+		this.timestamp = TripPlanner.getIntFromObject(timeObj);
+		
+		// Get latitude
+		Object latObj = TripPlanner.getFromMap(posObj, LAT_KEY);
+		this.latitude = TripPlanner.getDoubleFromObject(latObj);
+		
+		// Get longitude
+		Object longObj = TripPlanner.getFromMap(posObj, LONG_KEY);
+		this.longitude = TripPlanner.getDoubleFromObject(longObj);
+		
+		// Get heading
+		Object headObj = TripPlanner.getFromMap(posObj, HEADING_KEY);
+		this.heading = TripPlanner.getIntFromObject(headObj);
 	}
 	
-	//  Accessor Functions	
+	/** 
+	 * Accessor Methods
+	 * */	
 	public int getTime() {
-		return pos_time;
+		return timestamp;
 	}
 	
-	public float getLat() {
-		return pos_lat;
+	public double getLat() {
+		return latitude;
 	}
 	
-	public float getLong() {
-		return pos_long;
+	public double getLong() {
+		return longitude;
 	}
 	
 	public int getHeading() {
-		return pos_heading;
-	}
-		
+		return heading;
+	}	
 }
