@@ -6,7 +6,7 @@
  import javax.imageio.ImageIO;
  
 //Create a simple GUI window
- public class frame {
+ public class Views {
 	 public static void createWindow() {
 		 //Create and set up the window.
 		 JFrame frame = new JFrame("MBTA Trip Planner"); 
@@ -159,9 +159,5 @@
 	
 		 container.add(table.getTableHeader(), BorderLayout.PAGE_START);
 		 container.add(table);		    
-	 }
-	 
-	 public static void main(String[] args) {		 
-		 createWindow();
-	 } 	 
+	 }	 
  } 

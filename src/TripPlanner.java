@@ -61,6 +61,8 @@ public abstract class TripPlanner {
 		orange = new TrainLine();
 		red = new TrainLine();
 
+		Views.createWindow();
+		
 		// Update lines and view
 		update();
 
