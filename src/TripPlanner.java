@@ -68,19 +68,19 @@ public abstract class TripPlanner {
 	private static final File TEST_RED;
 	static {
 		File temp;
-		temp = new File("src/MBTA_test_data/2012_10_19/TestRed_2012_10_19.json");
+		temp = new File("MBTA_test_data/2012_10_19/TestRed_2012_10_19.json");
 		TEST_RED = temp;
 	}
 	private static final File TEST_BLUE;
 	static {
 		File temp;
-		temp = new File("src/MBTA_test_data/2012_10_19/TestBlue_2012_10_19.json");
+		temp = new File("MBTA_test_data/2012_10_19/TestBlue_2012_10_19.json");
 		TEST_BLUE = temp;
 	}
 	private static final File TEST_ORANGE;
 	static {
 		File temp;
-		temp = new File("src/MBTA_test_data/2012_10_19/TestOrange_2012_10_19.json");
+		temp = new File("MBTA_test_data/2012_10_19/TestOrange_2012_10_19.json");
 		TEST_ORANGE = temp;
 	}
 	private static Views view;
