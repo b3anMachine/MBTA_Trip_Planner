@@ -10,7 +10,7 @@ import javax.imageio.ImageIO;
 
 //Create a simple GUI window
 public class Views implements MouseListener {
-	public static final String IMAGE_PATH = "src/mbta.bmp";
+	public static final String IMAGE_PATH = "mbta.bmp";
 	public static JLabel imageLabel;
 	public static int scaleX = 400;
 	public static int scaleY = 500;
