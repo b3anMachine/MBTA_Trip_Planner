@@ -19,7 +19,7 @@ public class TrainLine {
 	// Line name
 	private String line;
 	// List of trains
-	private List<Train> trains;
+	private LinkedList<Train> trains;
 	
 	// TrainLine constructors
 	public TrainLine() { }
@@ -34,7 +34,7 @@ public class TrainLine {
 		this.line = TripPlanner.getStringFromObject(lineObj);
 		
 		// Get trains list
-		List<Train> ts = new LinkedList<Train>();
+		LinkedList<Train> ts = new LinkedList<Train>();
 		Object trainsObj = TripPlanner.getFromMap(tripListObj, TRIPS_KEY);
 		List<?> temp = TripPlanner.getListFromObject(trainsObj);
 		// Create and add each train to list
@@ -55,7 +55,7 @@ public class TrainLine {
 		return line;
 	}
 	
-	public List<Train> getTrains() {
+	public LinkedList<Train> getTrains() {
 		return trains;
 	}
 }

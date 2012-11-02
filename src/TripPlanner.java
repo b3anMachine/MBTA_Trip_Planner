@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -14,12 +15,22 @@ public abstract class TripPlanner {
 
 	// Whether we're using live data or not
 	private boolean liveData;
+	// Live Lines
+	private static LinkedList<TrainLine> liveLines;
 	// Blue Line
 	private static TrainLine blue;
 	// Red Line
 	private static TrainLine red;
 	// Orange Line
 	private static TrainLine orange;
+	// Test Lines
+	private static LinkedList<TrainLine> testLines;
+	// Test Red Line
+	private static TrainLine testRed;
+	// Test Blue Line
+	private static TrainLine testBlue;
+	// Test Orange Line
+	private static TrainLine testOrange;
 	// Jackson processor ObjectMapper
 	static ObjectMapper mapper = new ObjectMapper();
 
@@ -54,17 +65,41 @@ public abstract class TripPlanner {
 		}
 		RED_URL = temp;
 	}
+	private static final File TEST_RED;
+	static {
+		File temp;
+		temp = new File("src/MBTA_test_data/2012_10_19/TestRed_2012_10_19.json");
+		TEST_RED = temp;
+	}
+	private static final File TEST_BLUE;
+	static {
+		File temp;
+		temp = new File("src/MBTA_test_data/2012_10_19/TestBlue_2012_10_19.json");
+		TEST_BLUE = temp;
+	}
+	private static final File TEST_ORANGE;
+	static {
+		File temp;
+		temp = new File("src/MBTA_test_data/2012_10_19/TestOrange_2012_10_19.json");
+		TEST_ORANGE = temp;
+	}
+	private static Views view;
 
 	public static void main(String[] args) {
 		// Initialize train lines
 		blue = new TrainLine();
 		orange = new TrainLine();
 		red = new TrainLine();
-
-		Views.createWindow();
+		liveLines = new LinkedList<TrainLine>();
+		testRed = new TrainLine();
+		testBlue = new TrainLine();
+		testOrange = new TrainLine();
+		testLines = new LinkedList<TrainLine>();
 		
 		// Update lines and view
 		update();
+		
+		view = new Views(testLines);
 
 		System.out.println(blue.toString());
 		System.out.println(red.toString());
@@ -76,13 +111,29 @@ public abstract class TripPlanner {
 		orange = updateLine(ORANGE_URL, orange);
 		red = updateLine(RED_URL, red);
 		blue = updateLine(BLUE_URL, blue);
+		liveLines.add(orange);
+		liveLines.add(red);
+		liveLines.add(blue);
+		testRed = updateLine(TEST_RED, testRed);
+		testOrange = updateLine(TEST_ORANGE, testOrange);
+		testBlue = updateLine(TEST_BLUE, testBlue);
+		testLines.add(testRed);
+		testLines.add(testOrange);
+		testLines.add(testBlue);
 	}
 
 	// Update and return given train line with the Jackson parser
-	public static TrainLine updateLine(URL address, TrainLine line) {
+	public static <T> TrainLine updateLine(T address, TrainLine line) {
 		try {
-			// Get train data from web
-			Object trainData = mapper.readValue(address, Object.class);
+			Object trainData = new Object();
+			if (address instanceof URL) {
+				// Get train data from web
+				trainData = mapper.readValue((URL) address, Object.class);
+			}
+			else if (address instanceof File) {
+				// Get train data locally
+				trainData = mapper.readValue((File) address, Object.class);
+			}
 			//System.out.println(trainData.toString());
 			// Go inside the wrapper
 			Object tripListObj = getFromMap(trainData, TRIP_LIST_KEY);

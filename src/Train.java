@@ -56,10 +56,10 @@ public class Train {
 	public String getTrainID() {
 		return trainID;
 	}
-	
+	/*
 	public String getTrainLine() {
 		return line;
-	}
+	}*/
 	
 	public String getTrainDestination () {
 		return destination;
