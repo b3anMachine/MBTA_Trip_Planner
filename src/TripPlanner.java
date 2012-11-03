@@ -99,7 +99,7 @@ public abstract class TripPlanner {
 		// Update lines and view
 		update();
 		
-		view = new Views(testLines);
+		view = new Views(liveLines);
 
 		System.out.println(blue.toString());
 		System.out.println(red.toString());
