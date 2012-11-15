@@ -14,7 +14,7 @@ public abstract class TripPlanner {
 	private static final String TRIP_LIST_KEY = "TripList";
 
 	// Whether we're using live data or not
-	private boolean liveData;
+	private static boolean liveData;
 	// Live Lines
 	private static LinkedList<TrainLine> liveLines;
 	// Blue Line
@@ -95,17 +95,20 @@ public abstract class TripPlanner {
 		testBlue = new TrainLine();
 		testOrange = new TrainLine();
 		testLines = new LinkedList<TrainLine>();
-		
+		// Sets default to use live data instead of  test data
+		liveData = true;
+				
 		// Update lines and view
 		update();
 		
 		view = new Views(liveLines);
-
+		
+		
 		System.out.println(blue.toString());
 		System.out.println(red.toString());
 		System.out.println(orange.toString());
 	}
-
+	
 	// Updates all train lines
 	private static void update() {
 		orange = updateLine(ORANGE_URL, orange);
