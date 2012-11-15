@@ -95,7 +95,9 @@ public abstract class TripPlanner {
 		testBlue = new TrainLine();
 		testOrange = new TrainLine();
 		testLines = new LinkedList<TrainLine>();
-
+		// Sets default to use live data instead of  test data
+		liveData = true;
+		
 		if (!liveData) {
 			testRed = updateLine(TEST_RED, testRed);
 			testOrange = updateLine(TEST_ORANGE, testOrange);
@@ -117,7 +119,7 @@ public abstract class TripPlanner {
 		System.out.println(red.toString());
 		System.out.println(orange.toString());
 	}
-
+	
 	// Updates all train lines
 	private static void update() {
 		orange = updateLine(ORANGE_URL, orange);
