@@ -14,7 +14,7 @@ public abstract class TripPlanner {
 	private static final String TRIP_LIST_KEY = "TripList";
 
 	// Whether we're using live data or not
-	private boolean liveData;
+	private static boolean liveData;
 	// Live Lines
 	private static LinkedList<TrainLine> liveLines;
 	// Blue Line
@@ -95,11 +95,23 @@ public abstract class TripPlanner {
 		testBlue = new TrainLine();
 		testOrange = new TrainLine();
 		testLines = new LinkedList<TrainLine>();
-		
-		// Update lines and view
-		update();
-		
-		view = new Views(liveLines);
+
+		if (!liveData) {
+			testRed = updateLine(TEST_RED, testRed);
+			testOrange = updateLine(TEST_ORANGE, testOrange);
+			testBlue = updateLine(TEST_BLUE, testBlue);
+			testLines.add(testRed);
+			testLines.add(testOrange);
+			testLines.add(testBlue);
+
+			view = new Views(testLines);
+		}
+		else {
+			// Update lines and view
+			update();
+
+			view = new Views(liveLines);
+		}
 
 		System.out.println(blue.toString());
 		System.out.println(red.toString());
@@ -114,12 +126,6 @@ public abstract class TripPlanner {
 		liveLines.add(orange);
 		liveLines.add(red);
 		liveLines.add(blue);
-		testRed = updateLine(TEST_RED, testRed);
-		testOrange = updateLine(TEST_ORANGE, testOrange);
-		testBlue = updateLine(TEST_BLUE, testBlue);
-		testLines.add(testRed);
-		testLines.add(testOrange);
-		testLines.add(testBlue);
 	}
 
 	// Update and return given train line with the Jackson parser
@@ -154,11 +160,11 @@ public abstract class TripPlanner {
 		return line;
 	}
 
-	
+
 	/**
 	 * Deal with Objects received from JSON
 	 * */
-	
+
 	// Check if a value exists before getting it
 	static Object getFromMap(Object map, String key) {
 		if (map instanceof Map<?,?>) {
@@ -179,7 +185,7 @@ public abstract class TripPlanner {
 			temp = mapper.convertValue(o, Integer.class);
 		return temp;
 	}
-	
+
 	// Return given object as a double
 	static double getDoubleFromObject(Object o) {
 		double temp = 0.0;
@@ -187,7 +193,7 @@ public abstract class TripPlanner {
 			temp = mapper.convertValue(o, Double.class);
 		return temp;
 	}
-	
+
 	// Return given object as a String
 	static String getStringFromObject(Object o) {
 		String temp = "";
@@ -195,7 +201,7 @@ public abstract class TripPlanner {
 			temp = mapper.convertValue(o, String.class);
 		return temp;
 	}
-	
+
 	// Return given object as a list
 	static List<?> getListFromObject(Object o) {
 		List<?> temp = new LinkedList();
