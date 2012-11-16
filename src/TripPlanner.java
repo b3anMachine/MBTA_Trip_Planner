@@ -39,10 +39,13 @@ public abstract class TripPlanner {
 	private static TrainLine testOrange;
 	// Jackson processor ObjectMapper
 	static ObjectMapper mapper = new ObjectMapper();
-	// Stops
+	// List of Stops
 	static List<Stop> stops = new LinkedList<Stop>();
 
-	// Constants for JSON URLs
+	/** 
+	 * Constants for JSON URLs
+	 * **/
+	// Orange line live data URL
 	private static final URL ORANGE_URL;
 	static {
 		URL temp;
@@ -53,6 +56,7 @@ public abstract class TripPlanner {
 		}
 		ORANGE_URL = temp;
 	}
+	// Blue line live data URL
 	private static final URL BLUE_URL;
 	static {
 		URL temp;
@@ -63,6 +67,7 @@ public abstract class TripPlanner {
 		}
 		BLUE_URL = temp;
 	}
+	// Red line live data URL
 	private static final URL RED_URL;
 	static {
 		URL temp;
@@ -73,24 +78,28 @@ public abstract class TripPlanner {
 		}
 		RED_URL = temp;
 	}
+	// Red line test data URL
 	private static final File TEST_RED;
 	static {
 		File temp;
 		temp = new File("MBTA_test_data/2012_10_19/TestRed_2012_10_19.json");
 		TEST_RED = temp;
 	}
+	// Blue line test data URL
 	private static final File TEST_BLUE;
 	static {
 		File temp;
 		temp = new File("MBTA_test_data/2012_10_19/TestBlue_2012_10_19.json");
 		TEST_BLUE = temp;
 	}
+	// Orange line test data URL
 	private static final File TEST_ORANGE;
 	static {
 		File temp;
 		temp = new File("MBTA_test_data/2012_10_19/TestOrange_2012_10_19.json");
 		TEST_ORANGE = temp;
 	}
+	// An instance of the Views class
 	private static Views view;
 
 	public static void main(String[] args) {
@@ -160,6 +169,7 @@ public abstract class TripPlanner {
 	}
 
 	// Update and return given train line with the Jackson parser
+	// AG
 	public static <T> TrainLine updateLine(T address, TrainLine line) {
 		try {
 			Object trainData = new Object();
@@ -194,9 +204,11 @@ public abstract class TripPlanner {
 
 	/**
 	 * Deal with Objects received from JSON
+	 * AG
 	 * */
 
 	// Check if a value exists before getting it
+	// AG
 	static Object getFromMap(Object map, String key) {
 		if (map instanceof Map<?,?>) {
 			Map<?,?> castMap = (Map<?,?>) map;
@@ -210,6 +222,7 @@ public abstract class TripPlanner {
 	}
 
 	// Return given object as an int
+	// AG
 	static int getIntFromObject(Object o) {
 		int temp = 0;
 		if (o instanceof Integer)
@@ -218,6 +231,7 @@ public abstract class TripPlanner {
 	}
 
 	// Return given object as a double
+	// AG
 	static double getDoubleFromObject(Object o) {
 		double temp = 0.0;
 		if (o instanceof Double)
@@ -226,6 +240,7 @@ public abstract class TripPlanner {
 	}
 
 	// Return given object as a String
+	// AG
 	static String getStringFromObject(Object o) {
 		String temp = "";
 		if (o instanceof String)
@@ -234,6 +249,7 @@ public abstract class TripPlanner {
 	}
 
 	// Return given object as a list
+	// AG
 	static List<?> getListFromObject(Object o) {
 		List<?> temp = new LinkedList();
 		if (o instanceof List<?>)

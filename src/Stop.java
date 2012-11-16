@@ -24,6 +24,8 @@ public class Stop {
 	
 	public Stop() {}
 
+	// Prints some fields to the console
+	// AG
 	public void printStop() {
 		System.out.println("Line: "+Line+", Station: "+StationName+", Direction: "+Direction);
 	}
