@@ -7,19 +7,34 @@ import java.awt.event.MouseListener;
 import java.util.LinkedList;
 import java.math.*;
 import javax.imageio.ImageIO;
+import javax.swing.event.*;
+import javax.swing.table.*;
 
 //Create a simple GUI window
-public class Views implements MouseListener {
+public class Views implements MouseListener, TableModelListener {
 	public static final String IMAGE_PATH = "mbta.bmp";
 	public static JLabel imageLabel;
 	public static int scaleX = 400;
 	public static int scaleY = 500;
 	public static final int SCALE_TYPE = 3;
-
-	public Views(LinkedList<TrainLine> lines) {
-		createWindow(lines);
+	public static LinkedList<TrainLine> trainLines;
+	public static JTable table;
+	public static DefaultTableModel tableModel;
+	public enum viewState {
+		VIEWING_TRAINS,
+		VIEWING_STOPS,
+		VIEWING_ROUTE
 	}
 
+	public Views(LinkedList<TrainLine> lines) {
+		setLines(lines);
+		createWindow(trainLines);
+	}
+
+	public static void setLines(LinkedList<TrainLine> lines) {
+		trainLines = lines;
+		updateTableData(trainLines);
+	}
 	public void createWindow(LinkedList<TrainLine> lines) {
 		//Create and set up the window.
 		JFrame frame = new JFrame("MBTA Trip Planner"); 
@@ -141,8 +156,28 @@ public class Views implements MouseListener {
 	}
 
 	//takes an internal jframe and create a table in it
-	private static void createTable(JInternalFrame container, LinkedList<TrainLine> lines){
+	private void createTable(JInternalFrame container, LinkedList<TrainLine> lines){
 		String[] columnNames = {"ID", "Line", "Location", "Destination"};
+		Object[][] data = updateTableData(lines);
+		tableModel = new DefaultTableModel(data, columnNames);
+		tableModel.addTableModelListener(this);
+		table = new JTable(/*data, columnNames*/tableModel);
+		table.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY, 1));
+		table.setShowVerticalLines(true);
+		table.setSize(700,700);
+		JScrollPane scrollPane = new JScrollPane(table); 
+		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		//table.setFillsViewportHeight(true);
+
+		container.add(table.getTableHeader(), BorderLayout.PAGE_START);
+		container.add(scrollPane);
+		//container.add(table);
+	}
+	
+	
+	// Updates the data in the table
+	//  CM
+	public static Object[][] updateTableData(LinkedList<TrainLine> lines) {
 		int counter = 0;
 		for (TrainLine l : lines) {
 			for (Train t : l.getTrains()) {
@@ -169,20 +204,10 @@ public class Views implements MouseListener {
 				counter++;
 			}
 		}
-		JTable table = new JTable(data, columnNames);	
-		table.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY, 1));
-		table.setShowVerticalLines(true);
-		table.setSize(700,700);
-
-		JScrollPane scrollPane = new JScrollPane(table); 
-		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-		//table.setFillsViewportHeight(true);
-
-		container.add(table.getTableHeader(), BorderLayout.PAGE_START);
-		container.add(scrollPane);
-		//container.add(table);
+		return data;
 	}
 
+	
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		int button = e.getButton();
@@ -222,5 +247,10 @@ public class Views implements MouseListener {
 	public void mouseReleased(MouseEvent arg0) {
 		// TODO Auto-generated method stub
 
+	}
+	
+	@Override
+	public void tableChanged(TableModelEvent e) {
+		tableModel.fireTableDataChanged();
 	}
 } 

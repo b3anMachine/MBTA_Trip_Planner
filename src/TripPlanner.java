@@ -5,13 +5,19 @@ import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
+import java.util.TimerTask;
+import java.util.Timer;
+import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.*;
 
 public abstract class TripPlanner {
 	// Keys for accessing values in JSON files
 	private static final String TRIP_LIST_KEY = "TripList";
+	private static final int REPEAT_TIME = 10000; // Milliseconds (10)
+	private static final int TIMER_DELAY = 10000; // Milliseconds (10)
 
 	// Whether we're using live data or not
 	private static boolean liveData;
@@ -33,6 +39,8 @@ public abstract class TripPlanner {
 	private static TrainLine testOrange;
 	// Jackson processor ObjectMapper
 	static ObjectMapper mapper = new ObjectMapper();
+	// Stops
+	static List<Stop> stops = new LinkedList<Stop>();
 
 	// Constants for JSON URLs
 	private static final URL ORANGE_URL;
@@ -86,6 +94,8 @@ public abstract class TripPlanner {
 	private static Views view;
 
 	public static void main(String[] args) {
+		generateStops();
+
 		// Initialize train lines
 		blue = new TrainLine();
 		orange = new TrainLine();
@@ -97,7 +107,32 @@ public abstract class TripPlanner {
 		testLines = new LinkedList<TrainLine>();
 		// Sets default to use live data instead of  test data
 		liveData = true;
-		
+
+		// Update lines and view
+		update();
+		view = new Views(liveLines);
+
+		// Sets up timer to update trains every 10 seconds
+		//  CM
+		Timer updateTimer = new Timer();
+
+		class Updater extends TimerTask{
+			public void run() {
+				if (liveData) {
+					TripPlanner.update();
+					Views.setLines(liveLines);
+					System.out.println(blue.toString());
+					System.out.println(red.toString());
+					System.out.println(orange.toString());
+				} else {
+					this.cancel();
+				}
+			}
+		}		
+		TimerTask updateTask = new Updater();
+		updateTimer.schedule(updateTask, TIMER_DELAY, REPEAT_TIME);
+
+		/*
 		if (!liveData) {
 			testRed = updateLine(TEST_RED, testRed);
 			testOrange = updateLine(TEST_ORANGE, testOrange);
@@ -107,19 +142,13 @@ public abstract class TripPlanner {
 			testLines.add(testBlue);
 
 			view = new Views(testLines);
-		}
-		else {
-			// Update lines and view
-			update();
-
-			view = new Views(liveLines);
-		}
+		}*/
 
 		System.out.println(blue.toString());
 		System.out.println(red.toString());
 		System.out.println(orange.toString());
 	}
-	
+
 	// Updates all train lines
 	private static void update() {
 		orange = updateLine(ORANGE_URL, orange);
@@ -210,5 +239,26 @@ public abstract class TripPlanner {
 		if (o instanceof List<?>)
 			temp = mapper.convertValue(o, List.class);
 		return temp;
+	}
+
+	// Generates the list of stops from the included stops file
+	// AG
+	public static void generateStops() {
+		try {
+			JsonFactory f = new JsonFactory();
+			JsonParser jp = f.createJsonParser(new File("stops.json"));
+			// advance stream to START_ARRAY first:
+			jp.nextToken();
+			// and then each time, advance to opening START_OBJECT
+			while (jp.nextToken() == JsonToken.START_OBJECT) {
+				Stop stop = mapper.readValue(jp, Stop.class);
+				stops.add(stop);
+				stop.printStop();
+				// after binding, stream points to closing END_OBJECT
+			}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }
