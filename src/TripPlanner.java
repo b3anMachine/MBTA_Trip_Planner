@@ -40,7 +40,7 @@ public abstract class TripPlanner {
 	// Jackson processor ObjectMapper
 	static ObjectMapper mapper = new ObjectMapper();
 	// List of Stops
-	static List<Stop> stops = new LinkedList<Stop>();
+	static LinkedList<Stop> stops = new LinkedList<Stop>();
 
 	/** 
 	 * Constants for JSON URLs
@@ -119,7 +119,7 @@ public abstract class TripPlanner {
 
 		// Update lines and view
 		update();
-		view = new Views(liveLines);
+		view = new Views(liveLines, stops);
 
 		// Sets up timer to update trains every 10 seconds
 		//  CM
@@ -163,6 +163,7 @@ public abstract class TripPlanner {
 		orange = updateLine(ORANGE_URL, orange);
 		red = updateLine(RED_URL, red);
 		blue = updateLine(BLUE_URL, blue);
+		liveLines.clear();
 		liveLines.add(orange);
 		liveLines.add(red);
 		liveLines.add(blue);
