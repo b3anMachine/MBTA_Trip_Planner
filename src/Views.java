@@ -501,7 +501,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	public void tableChanged(TableModelEvent e) {
 		tableModel.fireTableDataChanged();
 	}
-}
+
 	//returns an array of strings from min to max
 	public String[] getTime(int min, int max){
 		String[] time = new String[max];
