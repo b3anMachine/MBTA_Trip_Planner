@@ -8,17 +8,34 @@ import java.awt.event.MouseMotionListener;
 import java.util.LinkedList;
 import java.math.*;
 import javax.imageio.ImageIO;
+import javax.swing.event.*;
+import javax.swing.table.*;
 
 //Create a simple GUI window
-public class Views implements MouseListener, MouseMotionListener{
+public class Views implements MouseListener, TableModelListener, MouseMotionListener {
 	public static final String IMAGE_PATH = "mbta.bmp";
 	public static JLabel imageLabel;
 	public static int scaleX = 800;
 	public static int scaleY = 1000;
 	public static final int SCALE_TYPE = 3;
+	public static LinkedList<TrainLine> trainLines;
+	public static JTable table;
+	public static DefaultTableModel tableModel;
+	public enum viewState {
+		VIEWING_TRAINS,
+		VIEWING_STOPS,
+		VIEWING_ROUTE
+	}
+
 	int draggedAtX, draggedAtY;
 	public Views(LinkedList<TrainLine> lines) {
-		createWindow(lines);
+		setLines(lines);
+		createWindow(trainLines);
+	}
+
+	public void setLines(LinkedList<TrainLine> lines) {
+		trainLines = lines;
+		updateTableData();
 	}
 
 	//creates the GUI
@@ -351,17 +368,37 @@ public class Views implements MouseListener, MouseMotionListener{
 		return newFrame(2,new Color(230,230,230));
 	}
 	//takes an internal jframe and create a table in it
-	private static void createTable(JInternalFrame container, LinkedList<TrainLine> lines){
+	private void createTable(JInternalFrame container, LinkedList<TrainLine> lines){
 		String[] columnNames = {"ID", "Line", "Location", "Destination"};
+		Object[][] data = updateTableData();
+		tableModel = new DefaultTableModel(data, columnNames);
+		tableModel.addTableModelListener(this);
+		table = new JTable(/*data, columnNames*/tableModel);
+		table.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY, 1));
+		table.setShowVerticalLines(true);
+		table.setSize(700,700);
+		JScrollPane scrollPane = new JScrollPane(table); 
+		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		//table.setFillsViewportHeight(true);
+
+		container.add(table.getTableHeader(), BorderLayout.PAGE_START);
+		container.add(scrollPane);
+		//container.add(table);
+	}
+	
+	
+	// Returns updated data for the table based on lines
+	//  CM
+	public static Object[][] updateTableData() {
 		int counter = 0;
-		for (TrainLine l : lines) {
+		for (TrainLine l : trainLines) {
 			for (Train t : l.getTrains()) {
 				counter++;
 			}
 		}
 		Object[][] data = new Object[counter][];
 		counter = 0;
-		for (TrainLine line : lines) {
+		for (TrainLine line : trainLines) {
 			String lineName = line.getLine();
 			LinkedList<Train> trains = line.getTrains();
 			for (int t = 0; t < trains.size(); t++) {
@@ -379,17 +416,7 @@ public class Views implements MouseListener, MouseMotionListener{
 				counter++;
 			}
 		}
-		JTable table = new JTable(data, columnNames);	
-		table.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY, 1));
-		table.setShowVerticalLines(true);
-		table.setSize(700,700);
-		JScrollPane scrollPane = new JScrollPane(table); 
-		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-		//table.setFillsViewportHeight(true);
-
-		container.add(table.getTableHeader(), BorderLayout.PAGE_START);
-		container.add(scrollPane);
-		//container.add(table);
+		return data;
 	}
 
 	//makes the stops table (to be refactored)
@@ -469,6 +496,12 @@ public class Views implements MouseListener, MouseMotionListener{
 		// TODO Auto-generated method stub
 
 	}
+	
+	@Override
+	public void tableChanged(TableModelEvent e) {
+		tableModel.fireTableDataChanged();
+	}
+}
 	//returns an array of strings from min to max
 	public String[] getTime(int min, int max){
 		String[] time = new String[max];
