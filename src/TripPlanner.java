@@ -129,7 +129,7 @@ public abstract class TripPlanner {
 			public void run() {
 				if (liveData) {
 					TripPlanner.update();
-					Views.setLines(liveLines);
+					view.setLines(liveLines);
 					System.out.println(blue.toString());
 					System.out.println(red.toString());
 					System.out.println(orange.toString());

@@ -31,9 +31,9 @@ public class Views implements MouseListener, TableModelListener {
 		createWindow(trainLines);
 	}
 
-	public static void setLines(LinkedList<TrainLine> lines) {
+	public void setLines(LinkedList<TrainLine> lines) {
 		trainLines = lines;
-		updateTableData(trainLines);
+		updateTableData();
 	}
 	public void createWindow(LinkedList<TrainLine> lines) {
 		//Create and set up the window.
@@ -158,7 +158,7 @@ public class Views implements MouseListener, TableModelListener {
 	//takes an internal jframe and create a table in it
 	private void createTable(JInternalFrame container, LinkedList<TrainLine> lines){
 		String[] columnNames = {"ID", "Line", "Location", "Destination"};
-		Object[][] data = updateTableData(lines);
+		Object[][] data = updateTableData();
 		tableModel = new DefaultTableModel(data, columnNames);
 		tableModel.addTableModelListener(this);
 		table = new JTable(/*data, columnNames*/tableModel);
@@ -175,18 +175,18 @@ public class Views implements MouseListener, TableModelListener {
 	}
 	
 	
-	// Updates the data in the table
+	// Returns updated data for the table based on lines
 	//  CM
-	public static Object[][] updateTableData(LinkedList<TrainLine> lines) {
+	public static Object[][] updateTableData() {
 		int counter = 0;
-		for (TrainLine l : lines) {
+		for (TrainLine l : trainLines) {
 			for (Train t : l.getTrains()) {
 				counter++;
 			}
 		}
 		Object[][] data = new Object[counter][];
 		counter = 0;
-		for (TrainLine line : lines) {
+		for (TrainLine line : trainLines) {
 			String lineName = line.getLine();
 			LinkedList<Train> trains = line.getTrains();
 			for (int t = 0; t < trains.size(); t++) {
@@ -253,4 +253,4 @@ public class Views implements MouseListener, TableModelListener {
 	public void tableChanged(TableModelEvent e) {
 		tableModel.fireTableDataChanged();
 	}
-} 
+}
