@@ -26,7 +26,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	public static JTable table;
 	public static DefaultTableModel tableModel;
 	public static String[] trainColumns = {"ID", "Line", "Location", "Destination", "Realtime"};
-	public static String[] stopColumns = {"Line","Name","Direction","Platform Order"};
+	public static String[] stopColumns = {"Line","Name","Direction","Stop ID"};
 	public static boolean showTrains = false;
 	public enum viewState {
 		VIEWING_TRAINS,
@@ -465,7 +465,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			data = new Object[stops.size()][];
 			counter = 0;
 			for (Stop s : stops) {
-				Object[] row = { s.Line, s.StationName, s.Direction, s.PlatformOrder };
+				Object[] row = { s.Line, s.StationName, s.Direction, s.stopID };
 				data[counter] = row;
 				counter++;
 			}

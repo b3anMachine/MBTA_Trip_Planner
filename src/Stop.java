@@ -1,7 +1,5 @@
 // Class to represent stops on the T.
 // CM and AG
-import java.util.LinkedList;
-
 public class Stop {
 	public String Line;
 	public String StationName;
@@ -11,23 +9,14 @@ public class Stop {
 	public boolean EndOfLine;
 	public String Direction;
 	public int PlatformOrder;
-	public LinkedList<Integer> connectsTo;
-	/*
-	public Stop(String lineName, String stationName, String stopName, boolean startOfLine, boolean endOfLine, String direction, int stopOrder) {
-		this.Line = lineName;
-		this.StationName = stationName;
-		this.StartOfLine = startOfLine;
-		this.EndOfLine = endOfLine;
-		this.Direction = direction;
-		this.PlatformOrder = stopOrder;
-	}*/
+	public String connectsTo;
 	
 	public Stop() {}
 
 	// Prints some fields to the console
 	// AG
 	public void printStop() {
-		System.out.println("Line: "+Line+", Station: "+StationName+
+		System.out.println("Line: "+Line+", Station: "+StationName+", Stop ID: "+stopID+
 				", Direction: "+Direction+", Platform Order: "+PlatformOrder);
 	}
 }

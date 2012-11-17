@@ -2,6 +2,7 @@
 	{
 		"Line": "Red",
 		"StationName": "ALEWIFE",
+		"stopID": "70061",
 		"PlatformOrder": "17",
 		"StartOfLine": "false",
 		"EndOfLine": "true",
@@ -11,6 +12,7 @@
 	{
 		"Line": "Red",
 		"StationName": "DAVIS",
+		"stopID": "70064",
 		"PlatformOrder": "16",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -20,6 +22,7 @@
 	{
 		"Line": "Red",
 		"StationName": "DAVIS",
+		"stopID": "70063",
 		"PlatformOrder": "1",
 		"StartOfLine": "true",
 		"EndOfLine": "false",
@@ -29,6 +32,7 @@
 	{
 		"Line": "Red",
 		"StationName": "PORTER",
+		"stopID": "70066",
 		"PlatformOrder": "15",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -38,6 +42,7 @@
 	{
 		"Line": "Red",
 		"StationName": "PORTER",
+		"stopID": "70065",
 		"PlatformOrder": "2",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -47,6 +52,7 @@
 	{
 		"Line": "Red",
 		"StationName": "HARVARD",
+		"stopID": "70068",
 		"PlatformOrder": "14",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -56,6 +62,7 @@
 	{
 		"Line": "Red",
 		"StationName": "HARVARD",
+		"stopID": "70067",
 		"PlatformOrder": "3",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -65,6 +72,7 @@
 	{
 		"Line": "Red",
 		"StationName": "CENTRAL",
+		"stopID": "70070",
 		"PlatformOrder": "13",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -74,6 +82,7 @@
 	{
 		"Line": "Red",
 		"StationName": "CENTRAL",
+		"stopID": "70069",
 		"PlatformOrder": "4",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -83,6 +92,7 @@
 	{
 		"Line": "Red",
 		"StationName": "KENDALL",
+		"stopID": "70072",
 		"PlatformOrder": "12",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -92,6 +102,7 @@
 	{
 		"Line": "Red",
 		"StationName": "KENDALL",
+		"stopID": "70071",
 		"PlatformOrder": "5",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -101,6 +112,7 @@
 	{
 		"Line": "Red",
 		"StationName": "CHARLES MGH",
+		"stopID": "70074",
 		"PlatformOrder": "11",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -110,6 +122,7 @@
 	{
 		"Line": "Red",
 		"StationName": "CHARLES MGH",
+		"stopID": "70073",
 		"PlatformOrder": "6",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -119,6 +132,7 @@
 	{
 		"Line": "Red",
 		"StationName": "PARK",
+		"stopID": "70076",
 		"PlatformOrder": "10",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -128,6 +142,7 @@
 	{
 		"Line": "Red",
 		"StationName": "PARK",
+		"stopID": "70075",
 		"PlatformOrder": "7",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -137,6 +152,7 @@
 	{
 		"Line": "Red",
 		"StationName": "DOWNTOWN CROSSING",
+		"stopID": "70078",
 		"PlatformOrder": "9",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -146,6 +162,7 @@
 	{
 		"Line": "Red",
 		"StationName": "DOWNTOWN CROSSING",
+		"stopID": "70077",
 		"PlatformOrder": "8",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -155,6 +172,7 @@
 	{
 		"Line": "Red",
 		"StationName": "SOUTH STATION",
+		"stopID": "70080",
 		"PlatformOrder": "8",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -164,6 +182,7 @@
 	{
 		"Line": "Red",
 		"StationName": "SOUTH STATION",
+		"stopID": "70079",
 		"PlatformOrder": "9",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -173,6 +192,7 @@
 	{
 		"Line": "Red",
 		"StationName": "BROADWAY",
+		"stopID": "70082",
 		"PlatformOrder": "7",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -182,6 +202,7 @@
 	{
 		"Line": "Red",
 		"StationName": "BROADWAY",
+		"stopID": "70081",
 		"PlatformOrder": "10",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -191,6 +212,7 @@
 	{
 		"Line": "Red",
 		"StationName": "ANDREW",
+		"stopID": "70084",
 		"PlatformOrder": "6",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -200,6 +222,7 @@
 	{
 		"Line": "Red",
 		"StationName": "ANDREW",
+		"stopID": "70083",
 		"PlatformOrder": "11",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -209,6 +232,7 @@
 	{
 		"Line": "Red",
 		"StationName": "JFK",
+		"stopID": "70086",
 		"PlatformOrder": "5",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -218,6 +242,7 @@
 	{
 		"Line": "Red",
 		"StationName": "JFK",
+		"stopID": "70085",
 		"PlatformOrder": "12",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -227,6 +252,7 @@
 	{
 		"Line": "Red",
 		"StationName": "SAVIN HILL",
+		"stopID": "70088",
 		"PlatformOrder": "4",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -236,6 +262,7 @@
 	{
 		"Line": "Red",
 		"StationName": "SAVIN HILL",
+		"stopID": "70087",
 		"PlatformOrder": "13",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -245,6 +272,7 @@
 	{
 		"Line": "Red",
 		"StationName": "FIELDS CORNER",
+		"stopID": "80090",
 		"PlatformOrder": "3",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -254,6 +282,7 @@
 	{
 		"Line": "Red",
 		"StationName": "FIELDS CORNER",
+		"stopID": "70089",
 		"PlatformOrder": "14",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -263,6 +292,7 @@
 	{
 		"Line": "Red",
 		"StationName": "SHAWMUT",
+		"stopID": "70092",
 		"PlatformOrder": "2",
 		"StartOfLine": "true",
 		"EndOfLine": "false",
@@ -272,6 +302,7 @@
 	{
 		"Line": "Red",
 		"StationName": "SHAWMUT",
+		"stopID": "70091",
 		"PlatformOrder": "15",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -281,6 +312,7 @@
 	{
 		"Line": "Red",
 		"StationName": "ASHMONT",
+		"stopID": "70094",
 		"PlatformOrder": "16",
 		"StartOfLine": "false",
 		"EndOfLine": "true",
@@ -289,7 +321,28 @@
 	},
 	{
 		"Line": "Red",
+		"StationName": "JFK",
+		"stopID": "70096",
+		"PlatformOrder": "5",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "NB",
+		"stop_name": "JFK/UMass Station"
+	},
+	{
+		"Line": "Red",
+		"StationName": "JFK",
+		"stopID": "70095",
+		"PlatformOrder": "12",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "SB",
+		"stop_name": "JFK/UMass Station"
+	},
+	{
+		"Line": "Red",
 		"StationName": "NORTH QUINCY",
+		"stopID": "70098",
 		"PlatformOrder": "4",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -299,6 +352,7 @@
 	{
 		"Line": "Red",
 		"StationName": "NORTH QUINCY",
+		"stopID": "70097",
 		"PlatformOrder": "13",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -308,6 +362,7 @@
 	{
 		"Line": "Red",
 		"StationName": "WOLLASTON",
+		"stopID": "70100",
 		"PlatformOrder": "3",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -317,6 +372,7 @@
 	{
 		"Line": "Red",
 		"StationName": "WOLLASTON",
+		"stopID": "70099",
 		"PlatformOrder": "14",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -326,6 +382,7 @@
 	{
 		"Line": "Red",
 		"StationName": "QUINCY CENTER",
+		"stopID": "70102",
 		"PlatformOrder": "2",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -335,6 +392,7 @@
 	{
 		"Line": "Red",
 		"StationName": "QUINCY CENTER",
+		"stopID": "70101",
 		"PlatformOrder": "15",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -344,6 +402,7 @@
 	{
 		"Line": "Red",
 		"StationName": "QUINCY ADAMS",
+		"stopID": "70104",
 		"PlatformOrder": "1",
 		"StartOfLine": "true",
 		"EndOfLine": "false",
@@ -353,6 +412,7 @@
 	{
 		"Line": "Red",
 		"StationName": "QUINCY ADAMS",
+		"stopID": "70103",
 		"PlatformOrder": "16",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -362,6 +422,7 @@
 	{
 		"Line": "Red",
 		"StationName": "BRAINTREE",
+		"stopID": "70105",
 		"PlatformOrder": "17",
 		"StartOfLine": "false",
 		"EndOfLine": "true",
@@ -371,6 +432,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "OAK GROVE",
+		"stopID": "70036",
 		"PlatformOrder": "18",
 		"StartOfLine": "false",
 		"EndOfLine": "true",
@@ -380,6 +442,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "MALDEN",
+		"stopID": "70035",
 		"PlatformOrder": "17",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -389,6 +452,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "MALDEN",
+		"stopID": "70034",
 		"PlatformOrder": "1",
 		"StartOfLine": "true",
 		"EndOfLine": "false",
@@ -398,6 +462,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "WELLINGTON",
+		"stopID": "70033",
 		"PlatformOrder": "16",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -407,6 +472,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "WELLINGTON",
+		"stopID": "70032",
 		"PlatformOrder": "2",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -416,6 +482,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "SULLIVAN",
+		"stopID": "70031",
 		"PlatformOrder": "15",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -425,6 +492,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "SULLIVAN",
+		"stopID": "70030",
 		"PlatformOrder": "3",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -434,6 +502,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "COMMUNITY",
+		"stopID": "70029",
 		"PlatformOrder": "14",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -443,6 +512,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "COMMUNITY",
+		"stopID": "70028",
 		"PlatformOrder": "4",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -452,6 +522,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "NORTH STATION",
+		"stopID": "70027",
 		"PlatformOrder": "13",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -461,6 +532,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "NORTH STATION",
+		"stopID": "70026",
 		"PlatformOrder": "5",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -470,6 +542,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "HAYMARKET",
+		"stopID": "70025",
 		"PlatformOrder": "12",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -479,6 +552,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "HAYMARKET",
+		"stopID": "70024",
 		"PlatformOrder": "6",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -488,6 +562,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "STATE",
+		"stopID": "70023",
 		"PlatformOrder": "11",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -497,6 +572,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "STATE",
+		"stopID": "70022",
 		"PlatformOrder": "7",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -506,6 +582,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "DOWNTOWN CROSSING",
+		"stopID": "70021",
 		"PlatformOrder": "10",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -515,6 +592,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "DOWNTOWN CROSSING",
+		"stopID": "70020",
 		"PlatformOrder": "8",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -524,6 +602,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "CHINATOWN",
+		"stopID": "70019",
 		"PlatformOrder": "9",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -533,6 +612,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "CHINATOWN",
+		"stopID": "70018",
 		"PlatformOrder": "9",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -542,6 +622,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "TUFTS MEDICAL CENTER",
+		"stopID": "70017",
 		"PlatformOrder": "8",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -551,6 +632,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "TUFTS MEDICAL CENTER",
+		"stopID": "70016",
 		"PlatformOrder": "10",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -560,6 +642,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "BACK BAY",
+		"stopID": "70015",
 		"PlatformOrder": "7",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -569,6 +652,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "BACK BAY",
+		"stopID": "70014",
 		"PlatformOrder": "11",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -578,6 +662,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "MASS AVE",
+		"stopID": "70013",
 		"PlatformOrder": "6",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -587,6 +672,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "MASS AVE",
+		"stopID": "70012",
 		"PlatformOrder": "12",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -596,6 +682,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "RUGGLES",
+		"stopID": "70011",
 		"PlatformOrder": "5",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -605,6 +692,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "RUGGLES",
+		"stopID": "70010",
 		"PlatformOrder": "13",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -614,6 +702,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "ROXBURY",
+		"stopID": "70009",
 		"PlatformOrder": "4",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -623,6 +712,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "ROXBURY",
+		"stopID": "70008",
 		"PlatformOrder": "14",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -632,6 +722,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "JACKSON",
+		"stopID": "70007",
 		"PlatformOrder": "3",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -641,6 +732,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "JACKSON",
+		"stopID": "70006",
 		"PlatformOrder": "15",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -650,6 +742,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "STONY BROOK",
+		"stopID": "70005",
 		"PlatformOrder": "2",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -659,6 +752,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "STONY BROOK",
+		"stopID": "70004",
 		"PlatformOrder": "16",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -668,6 +762,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "GREEN STREET",
+		"stopID": "70003",
 		"PlatformOrder": "1",
 		"StartOfLine": "true",
 		"EndOfLine": "false",
@@ -677,6 +772,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "GREEN STREET",
+		"stopID": "70002",
 		"PlatformOrder": "17",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -686,6 +782,7 @@
 	{
 		"Line": "Orange",
 		"StationName": "FOREST HILLS",
+		"stopID": "70001",
 		"PlatformOrder": "18",
 		"StartOfLine": "false",
 		"EndOfLine": "true",
@@ -695,7 +792,8 @@
 	{
 		"Line": "Blue",
 		"StationName": "WONDERLAND",
-		"PlatformOrder": "12",
+		"stopID": "70060",
+		"PlatformOrder": "11",
 		"StartOfLine": "false",
 		"EndOfLine": "true",
 		"Direction": "EB",
@@ -704,7 +802,8 @@
 	{
 		"Line": "Blue",
 		"StationName": "REVERE",
-		"PlatformOrder": "11",
+		"stopID": "70058",
+		"PlatformOrder": "10",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"Direction": "EB",
@@ -713,6 +812,7 @@
 	{
 		"Line": "Blue",
 		"StationName": "REVERE",
+		"stopID": "70057",
 		"PlatformOrder": "1",
 		"StartOfLine": "true",
 		"EndOfLine": "false",
@@ -722,7 +822,8 @@
 	{
 		"Line": "Blue",
 		"StationName": "BEACHMONT",
-		"PlatformOrder": "10",
+		"stopID": "70056",
+		"PlatformOrder": "9",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"Direction": "EB",
@@ -731,6 +832,7 @@
 	{
 		"Line": "Blue",
 		"StationName": "BEACHMONT",
+		"stopID": "70055",
 		"PlatformOrder": "2",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -740,7 +842,8 @@
 	{
 		"Line": "Blue",
 		"StationName": "SUFFOLK DOWNS",
-		"PlatformOrder": "9",
+		"stopID": "70054",
+		"PlatformOrder": "8",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"Direction": "EB",
@@ -749,6 +852,7 @@
 	{
 		"Line": "Blue",
 		"StationName": "SUFFOLK DOWNS",
+		"stopID": "70053",
 		"PlatformOrder": "3",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -758,7 +862,8 @@
 	{
 		"Line": "Blue",
 		"StationName": "ORIENT HEIGHTS",
-		"PlatformOrder": "8",
+		"stopID": "70052",
+		"PlatformOrder": "7",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"Direction": "EB",
@@ -767,6 +872,7 @@
 	{
 		"Line": "Blue",
 		"StationName": "ORIENT HEIGHTS",
+		"stopID": "70051",
 		"PlatformOrder": "4",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -776,7 +882,8 @@
 	{
 		"Line": "Blue",
 		"StationName": "WOOD ISLAND",
-		"PlatformOrder": "7",
+		"stopID": "70050",
+		"PlatformOrder": "6",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"Direction": "EB",
@@ -785,6 +892,7 @@
 	{
 		"Line": "Blue",
 		"StationName": "WOOD ISLAND",
+		"stopID": "70049",
 		"PlatformOrder": "5",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -794,7 +902,8 @@
 	{
 		"Line": "Blue",
 		"StationName": "AIRPORT",
-		"PlatformOrder": "6",
+		"stopID": "70048",
+		"PlatformOrder": "5",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"Direction": "EB",
@@ -803,6 +912,7 @@
 	{
 		"Line": "Blue",
 		"StationName": "AIRPORT",
+		"stopID": "70047",
 		"PlatformOrder": "6",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -812,7 +922,8 @@
 	{
 		"Line": "Blue",
 		"StationName": "MAVERICK",
-		"PlatformOrder": "5",
+		"stopID": "70046",
+		"PlatformOrder": "4",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"Direction": "EB",
@@ -821,6 +932,7 @@
 	{
 		"Line": "Blue",
 		"StationName": "MAVERICK",
+		"stopID": "70045",
 		"PlatformOrder": "7",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -830,7 +942,8 @@
 	{
 		"Line": "Blue",
 		"StationName": "AQUARIUM",
-		"PlatformOrder": "4",
+		"stopID": "70044",
+		"PlatformOrder": "3",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"Direction": "EB",
@@ -839,6 +952,7 @@
 	{
 		"Line": "Blue",
 		"StationName": "AQUARIUM",
+		"stopID": "70043",
 		"PlatformOrder": "8",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -848,7 +962,8 @@
 	{
 		"Line": "Blue",
 		"StationName": "STATE",
-		"PlatformOrder": "3",
+		"stopID": "70042",
+		"PlatformOrder": "2",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"Direction": "EB",
@@ -857,6 +972,7 @@
 	{
 		"Line": "Blue",
 		"StationName": "STATE",
+		"stopID": "70041",
 		"PlatformOrder": "9",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -866,7 +982,8 @@
 	{
 		"Line": "Blue",
 		"StationName": "GOVERNMENT CENTER",
-		"PlatformOrder": "2",
+		"stopID": "70040",
+		"PlatformOrder": "1",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"Direction": "EB",
@@ -875,6 +992,7 @@
 	{
 		"Line": "Blue",
 		"StationName": "GOVERNMENT CENTER",
+		"stopID": "70039",
 		"PlatformOrder": "10",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
@@ -884,15 +1002,7 @@
 	{
 		"Line": "Blue",
 		"StationName": "BOWDOIN",
-		"PlatformOrder": "1",
-		"StartOfLine": "true",
-		"EndOfLine": "false",
-		"Direction": "EB",
-		"stop_name": "Bowdoin Station"
-	},
-	{
-		"Line": "Blue",
-		"StationName": "BOWDOIN",
+		"stopID": "70038",
 		"PlatformOrder": "11",
 		"StartOfLine": "false",
 		"EndOfLine": "true",

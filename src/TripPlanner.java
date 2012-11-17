@@ -2,6 +2,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -277,5 +278,15 @@ public abstract class TripPlanner {
 		catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	
+	// Generate a graph of stops from the list of stops
+	public HashMap<Integer, Node> getStopMap() {
+		HashMap<Integer, Node> graph = new HashMap<Integer, Node>();
+		
+		
+		
+		return graph;
 	}
 }
