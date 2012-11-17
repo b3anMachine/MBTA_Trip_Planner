@@ -2,7 +2,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -142,18 +141,6 @@ public abstract class TripPlanner {
 		TimerTask updateTask = new Updater();
 		updateTimer.schedule(updateTask, TIMER_DELAY, REPEAT_TIME);
 
-		/*
-		if (!liveData) {
-			testRed = updateLine(TEST_RED, testRed);
-			testOrange = updateLine(TEST_ORANGE, testOrange);
-			testBlue = updateLine(TEST_BLUE, testBlue);
-			testLines.add(testRed);
-			testLines.add(testOrange);
-			testLines.add(testBlue);
-
-			view = new Views(testLines);
-		}*/
-
 		System.out.println(blue.toString());
 		System.out.println(red.toString());
 		System.out.println(orange.toString());
@@ -278,15 +265,5 @@ public abstract class TripPlanner {
 		catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-	
-	
-	// Generate a graph of stops from the list of stops
-	public HashMap<Integer, Node> getStopMap() {
-		HashMap<Integer, Node> graph = new HashMap<Integer, Node>();
-		
-		
-		
-		return graph;
 	}
 }

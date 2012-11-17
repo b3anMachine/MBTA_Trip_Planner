@@ -25,7 +25,9 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	private static LinkedList<Stop> stops;
 	public static JTable table;
 	public static DefaultTableModel tableModel;
+	// Column names for the list of trains
 	public static String[] trainColumns = {"ID", "Line", "Location", "Destination", "Realtime"};
+	// Column names for the list of stops
 	public static String[] stopColumns = {"Line","Name","Direction","Stop ID"};
 	public static boolean showTrains = false;
 	public enum viewState {

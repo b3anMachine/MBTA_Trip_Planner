@@ -8,15 +8,13 @@ public class Stop {
 	public boolean StartOfLine;
 	public boolean EndOfLine;
 	public String Direction;
-	public int PlatformOrder;
-	public String connectsTo;
 	
 	public Stop() {}
 
 	// Prints some fields to the console
 	// AG
 	public void printStop() {
-		System.out.println("Line: "+Line+", Station: "+StationName+", Stop ID: "+stopID+
-				", Direction: "+Direction+", Platform Order: "+PlatformOrder);
+		System.out.println("Line: "+Line+", Station: "+StationName+"," +
+				" Stop ID: "+stopID+", Direction: "+Direction);
 	}
 }
