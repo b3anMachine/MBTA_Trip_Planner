@@ -1,3 +1,5 @@
+import java.util.LinkedList;
+
 // Class to represent stops on the T.
 // CM and AG
 public class Stop {
@@ -8,6 +10,7 @@ public class Stop {
 	public boolean StartOfLine;
 	public boolean EndOfLine;
 	public String Direction;
+	public LinkedList<Integer> NextTo;
 	
 	public Stop() {}
 
