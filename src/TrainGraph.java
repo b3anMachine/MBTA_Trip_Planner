@@ -8,7 +8,8 @@ import java.util.Map;
 
 /**
  * @author CM
- *
+ * 
+ * Graph class for route planning
  */
 public class TrainGraph {
 	
@@ -19,11 +20,12 @@ public class TrainGraph {
 		int counter = 0;
 		while(counter <= size) {
 			Stop stop = stops.get(counter);
+			counter++;
 			adjacent.put(stop, stop.NextTo);
 		}
-		
-		
 	}
+	
+	
 
 }
 

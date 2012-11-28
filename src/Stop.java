@@ -18,6 +18,6 @@ public class Stop {
 	// AG
 	public void printStop() {
 		System.out.println("Line: "+Line+", Station: "+StationName+"," +
-				" Stop ID: "+stopID+", Direction: "+Direction);
+				" Stop ID: "+stopID+", Direction: "+Direction+", NextTo: "+NextTo.toString());
 	}
 }

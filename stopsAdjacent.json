@@ -1,0 +1,532 @@
+[
+	{
+		"Line": "Orange",
+		"StationName": "FOREST HILLS",
+		"stopID": "70001",
+		"StartOfLine": "false",
+		"EndOfLine": "true",
+		"Direction": "SB",
+		"stop_name": "Forest Hills Station",
+		"NextTo": ["70003"]
+	},
+	{
+		"Line": "Orange",
+		"StationName": "GREEN STREET",
+		"stopID": "70003",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "NB",
+		"stop_name": "Green St. Station",
+		"NextTo": ["70001", "70005"]
+	},
+	{
+		"Line": "Orange",
+		"StationName": "STONY BROOK",
+		"stopID": "70005",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "NB",
+		"stop_name": "Stony Brook Station",
+		"NextTo": ["70003", "70007"]
+	},
+	{
+		"Line": "Orange",
+		"StationName": "JACKSON",
+		"stopID": "70007",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "NB",
+		"stop_name": "Jackson Square Station",
+		"NextTo": ["70005", "70009"]
+	},
+	{
+		"Line": "Orange",
+		"StationName": "ROXBURY",
+		"stopID": "70009",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "NB",
+		"stop_name": "Roxbury Crossing Station",
+		"NextTo": ["70007", "70011"]
+	},
+	{
+		"Line": "Orange",
+		"StationName": "RUGGLES",
+		"stopID": "70011",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "NB",
+		"stop_name": "Ruggles Station",
+		"NextTo": ["70009", "70013"]
+	},
+	{
+		"Line": "Orange",
+		"StationName": "MASS AVE",
+		"stopID": "70013",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "NB",
+		"stop_name": "Massachusetts Ave. Station",
+		"NextTo": ["70011", "70015"]
+	},
+	{
+		"Line": "Orange",
+		"StationName": "BACK BAY",
+		"stopID": "70015",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "NB",
+		"stop_name": "Back Bay Station",
+		"NextTo": ["70013", "70017"]
+	},
+	{
+		"Line": "Orange",
+		"StationName": "TUFTS MEDICAL CENTER",
+		"stopID": "70017",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "NB",
+		"stop_name": "Tufts Medical Center Station",
+		"NextTo": ["70015", "70019"]
+	},
+	{
+		"Line": "Orange",
+		"StationName": "CHINATOWN",
+		"stopID": "70019",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "NB",
+		"stop_name": "Chinatown Station",
+		"NextTo": ["70017", "70021"]
+	},
+	{
+		"Line": "Orange",
+		"StationName": "DOWNTOWN CROSSING",
+		"stopID": "70021",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "NB",
+		"stop_name": "Downtown Crossing Station",
+		"NextTo": ["70019", "70023", "70077"]
+	},
+	{
+		"Line": "Orange",
+		"StationName": "STATE",
+		"stopID": "70023",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "NB",
+		"stop_name": "State St. Station",
+		"NextTo": ["70021", "20025", "70042"]
+	},
+	{
+		"Line": "Orange",
+		"StationName": "HAYMARKET",
+		"stopID": "70025",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "NB",
+		"stop_name": "Haymarket Station",
+		"NextTo": ["70023", "70027"]
+	},
+	{
+		"Line": "Orange",
+		"StationName": "NORTH STATION",
+		"stopID": "70027",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "NB",
+		"stop_name": "North Station",
+		"NextTo": ["70025", "70029"]
+	},
+	{
+		"Line": "Orange",
+		"StationName": "COMMUNITY",
+		"stopID": "70029",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "NB",
+		"stop_name": "Community College Station",
+		"NextTo": ["70027", "70031"]
+	},
+	{
+		"Line": "Orange",
+		"StationName": "SULLIVAN",
+		"stopID": "70031",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "NB",
+		"stop_name": "Sullivan Station",
+		"NextTo": ["70033", "70029"]
+	},
+	{
+		"Line": "Orange",
+		"StationName": "WELLINGTON",
+		"stopID": "70033",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "NB",
+		"stop_name": "Wellington Station",
+		"NextTo": ["70031", "70035"]
+	},
+	{
+		"Line": "Orange",
+		"StationName": "MALDEN",
+		"stopID": "70035",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "NB",
+		"stop_name": "Malden Center Station",
+		"NextTo": ["70033", "70036"]
+	},
+	{
+		"Line": "Orange",
+		"StationName": "OAK GROVE",
+		"stopID": "70036",
+		"StartOfLine": "false",
+		"EndOfLine": "true",
+		"Direction": "NB",
+		"stop_name": "Oak Grove Station",
+		"NextTo": ["70035"]
+	},
+	{
+		"Line": "Blue",
+		"StationName": "BOWDOIN",
+		"stopID": "70038",
+		"StartOfLine": "false",
+		"EndOfLine": "true",
+		"Direction": "WB",
+		"stop_name": "Bowdoin Station",
+		"NextTo": ["70040"]
+	},
+	{
+		"Line": "Blue",
+		"StationName": "GOVERNMENT CENTER",
+		"stopID": "70040",
+		"StartOfLine": "true",
+		"EndOfLine": "false",
+		"Direction": "EB",
+		"stop_name": "Government Center Station",
+		"NextTo": ["70038", "70042"]
+	},
+	{
+		"Line": "Blue",
+		"StationName": "STATE",
+		"stopID": "70042",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "EB",
+		"stop_name": "State St. Station",
+		"NextTo": ["70040", "70044", "70023"]
+	},
+	{
+		"Line": "Blue",
+		"StationName": "AQUARIUM",
+		"stopID": "70044",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "EB",
+		"stop_name": "Aquarium Station",
+		"NextTo": ["70042", "70046"]
+	},
+	{
+		"Line": "Blue",
+		"StationName": "MAVERICK",
+		"stopID": "70046",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "EB",
+		"stop_name": "Maverick Station",
+		"NextTo": ["70044", "70048"]
+	},
+	{
+		"Line": "Blue",
+		"StationName": "AIRPORT",
+		"stopID": "70048",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "EB",
+		"stop_name": "Airport Station",
+		"NextTo": ["70046", "70050"]
+	},
+	{
+		"Line": "Blue",
+		"StationName": "WOOD ISLAND",
+		"stopID": "70050",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "EB",
+		"stop_name": "Wood Island Station",
+		"NextTo": ["70048", "70052"]
+	},
+	{
+		"Line": "Blue",
+		"StationName": "ORIENT HEIGHTS",
+		"stopID": "70052",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "EB",
+		"stop_name": "Orient Heights Station",
+		"NextTo": ["70050", "70054"]
+	},
+	{
+		"Line": "Blue",
+		"StationName": "SUFFOLK DOWNS",
+		"stopID": "70054",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "EB",
+		"stop_name": "Suffolk Downs Station",
+		"NextTo": ["70052", "70056"]
+	},
+	{
+		"Line": "Blue",
+		"StationName": "BEACHMONT",
+		"stopID": "70056",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "EB",
+		"stop_name": "Beachmont Station",
+		"NextTo": ["70054", "70058"]
+	},
+	{
+		"Line": "Blue",
+		"StationName": "REVERE",
+		"stopID": "70058",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "EB",
+		"stop_name": "Revere Beach Station",
+		"NextTo": ["70056", "70060"]
+	},
+	{
+		"Line": "Blue",
+		"StationName": "WONDERLAND",
+		"stopID": "70060",
+		"StartOfLine": "false",
+		"EndOfLine": "true",
+		"Direction": "EB",
+		"stop_name": "Wonderland Station",
+		"NextTo": ["70058"]
+	},
+	{
+		"Line": "Red",
+		"StationName": "ALEWIFE",
+		"stopID": "70061",
+		"StartOfLine": "false",
+		"EndOfLine": "true",
+		"Direction": "NB",
+		"stop_name": "Alewife Station",
+		"NextTo": ["70063"]
+	},
+	{
+		"Line": "Red",
+		"StationName": "DAVIS",
+		"stopID": "70063",
+		"StartOfLine": "true",
+		"EndOfLine": "false",
+		"Direction": "SB",
+		"stop_name": "Davis Station",
+		"NextTo": ["70063", "70065"]
+	},
+	{
+		"Line": "Red",
+		"StationName": "PORTER",
+		"stopID": "70065",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "SB",
+		"stop_name": "Porter Square Station",
+		"NextTo": ["70063", "70067"]
+	},
+	{
+		"Line": "Red",
+		"StationName": "HARVARD",
+		"stopID": "70067",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "SB",
+		"stop_name": "Harvard Square Station",
+		"NextTo": ["70065", "70069"]
+	},
+	{
+		"Line": "Red",
+		"StationName": "CENTRAL",
+		"stopID": "70069",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "SB",
+		"stop_name": "Central Square Station",
+		"NextTo": ["70067", "70071"]
+	},
+	{
+		"Line": "Red",
+		"StationName": "KENDALL",
+		"stopID": "70071",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "SB",
+		"stop_name": "Kendall/MIT Station",
+		"NextTo": ["70069", "70073"]
+	},
+	{
+		"Line": "Red",
+		"StationName": "CHARLES MGH",
+		"stopID": "70073",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "SB",
+		"stop_name": "Charles/MGH Station",
+		"NextTo": ["70071", "70075"]
+	},
+	{
+		"Line": "Red",
+		"StationName": "PARK",
+		"stopID": "70075",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "SB",
+		"stop_name": "Park St. Station",
+		"NextTo": ["70073", "70077"]
+	},
+	{
+		"Line": "Red",
+		"StationName": "DOWNTOWN CROSSING",
+		"stopID": "70077",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "SB",
+		"stop_name": "Downtown Crossing Station",
+		"NextTo": ["70075", "70079", "70021"]
+	},
+	{
+		"Line": "Red",
+		"StationName": "SOUTH STATION",
+		"stopID": "70079",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "SB",
+		"stop_name": "South Station",
+		"NextTo": ["70077", "70081"]
+	},
+	{
+		"Line": "Red",
+		"StationName": "BROADWAY",
+		"stopID": "70081",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "SB",
+		"stop_name": "Broadway Station",
+		"NextTo": ["70079", "70083"]
+	},
+	{
+		"Line": "Red",
+		"StationName": "ANDREW",
+		"stopID": "70083",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "SB",
+		"stop_name": "Andrew Station",
+		"NextTo": ["70081", "70085"]
+	},
+	{
+		"Line": "Red",
+		"StationName": "JFK",
+		"stopID": "70085",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "SB",
+		"stop_name": "JFK/UMass Station",
+		"NextTo": ["70083", "70087", "70097"]
+	},
+	{
+		"Line": "Red",
+		"StationName": "SAVIN HILL",
+		"stopID": "70087",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "SB",
+		"stop_name": "Savin Hill Station",
+		"NextTo": ["70085", "70089"]
+	},
+	{
+		"Line": "Red",
+		"StationName": "FIELDS CORNER",
+		"stopID": "70089",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "SB",
+		"stop_name": "Fields Corner Station",
+		"NextTo": ["70087", "70091"]
+	},
+	{
+		"Line": "Red",
+		"StationName": "SHAWMUT",
+		"stopID": "70091",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "SB",
+		"stop_name": "Shawmut Station",
+		"NextTo": ["70089", "70093"]
+	},
+	{
+		"Line": "Red",
+		"StationName": "ASHMONT",
+		"stopID": "70093",
+		"StartOfLine": "true",
+		"EndOfLine": "false",
+		"Direction": "NB",
+		"stop_name": "Ashmont Station",
+		"NextTo": ["70091"]
+	},
+	{
+		"Line": "Red",
+		"StationName": "NORTH QUINCY",
+		"stopID": "70097",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "SB",
+		"stop_name": "North Quincy Station",
+		"NextTo": ["70085", "70099"]
+	},
+	{
+		"Line": "Red",
+		"StationName": "WOLLASTON",
+		"stopID": "70099",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "SB",
+		"stop_name": "Wollaston Station",
+		"NextTo": ["70097", "70101"]
+	},
+	{
+		"Line": "Red",
+		"StationName": "QUINCY CENTER",
+		"stopID": "70101",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "SB",
+		"stop_name": "Quincy Center Station",
+		"NextTo": ["70099", "70103"]
+	},
+	{
+		"Line": "Red",
+		"StationName": "QUINCY ADAMS",
+		"stopID": "70103",
+		"StartOfLine": "false",
+		"EndOfLine": "false",
+		"Direction": "SB",
+		"stop_name": "Quincy Adams Station",
+		"NextTo": ["70101", "70105"]
+	},
+	{
+		"Line": "Red",
+		"StationName": "BRAINTREE",
+		"stopID": "70105",
+		"StartOfLine": "false",
+		"EndOfLine": "true",
+		"Direction": "SB",
+		"stop_name": "Braintree Station",
+		"NextTo": ["70103"]
+	}
+]
