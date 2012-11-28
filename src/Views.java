@@ -8,15 +8,20 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.math.*;
 import javax.imageio.ImageIO;
 import javax.swing.event.*;
 import javax.swing.table.*;
-
+import java.awt.image.BufferedImage;
 //Create a simple GUI window
-public class Views implements MouseListener, TableModelListener, MouseMotionListener {
+public class Views implements MouseListener, TableModelListener, MouseMotionListener{
+	
+	public static HashMap<String,MapStop> stopMap = new HashMap<String,MapStop>(70);  
+	
 	public static final String IMAGE_PATH = "mbta.bmp";
+	public static BufferedImage map;
 	public static JLabel imageLabel;
 	public static int scaleX = 800;
 	public static int scaleY = 1000;
@@ -37,12 +42,13 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	}
 
 	int draggedAtX, draggedAtY;
-
+	
 	// Views constructor
 	public Views(LinkedList<TrainLine> lines, LinkedList<Stop> stops) {
 		this.stops = stops;
 		setLines(lines);
 		createWindow(trainLines);
+		pushHash();
 	}
 
 	public void setLines(LinkedList<TrainLine> lines) {
@@ -376,9 +382,9 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			// Read from a file
 			File FileToRead = new File(url);
 			//Recognize file as image
-			Image Picture = ImageIO.read(FileToRead);
-			Image pic = Picture.getScaledInstance(width, height, type);
-			ImageIcon icon = new ImageIcon(pic);
+			map = ImageIO.read(FileToRead);
+			//Image pic = Picture.getScaledInstance(width, height, type);
+			ImageIcon icon = new ImageIcon(map);
 			//Show the image inside the label
 			label.setIcon(icon);
 		} 
@@ -406,6 +412,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	}
 	//takes an internal jframe and create a table in it
 	private void createTable(JInternalFrame container, LinkedList<TrainLine> lines){
+
 		tableModel = new DefaultTableModel();
 		tableModel.addTableModelListener(this);
 		table = new JTable(tableModel);
@@ -426,11 +433,14 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	// Returns updated data for the table based on lines
 	//  CM and AG
 	public static void updateTableData() {
+		
 		int counter = 0;
 		Object[][] data;
 
 		// If the trains data should be shown
 		if (showTrains) {
+			Graphics g = map.getGraphics();
+
 			// Get number of all trains
 			for (TrainLine l : trainLines) {
 				for (Train t : l.getTrains()) {
@@ -451,16 +461,31 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 					Double lat = (double)((int)(pos.getLat()*100))/100;
 					Double lon = (double)((int)(pos.getLong()*100))/100;
 					String posString;
+					/*
 					if (lat.equals(0.0) && lon.equals(0.0))
 						posString = "none";
 					else
 						posString = "("+lat+","+lon+")";
+					*/
+					posString = trains.get(t).getTrainPredictions().get(0).getName();
 					Object[] row = { trains.get(t).getTrainID(), lineName, 
 							posString, trains.get(t).getTrainDestination(), new Date().getTime() };
+					
+					//drawNode(stopMap.get("Downtown Crossing").x,stopMap.get("Downtown Crossing").y,g);
+					if(!(stopMap.get(posString)==null)){
+					drawNode(stopMap.get(posString).x,stopMap.get(posString).y,g);
+					}
+					
+					//drawNode(100,100,g);
+					
 					data[counter] = row;
 					counter++;
+
 				}
 			}
+			
+	        g.dispose();
+	        imageLabel.repaint();
 		}
 		// If the stops should be shown
 		else {
@@ -476,11 +501,18 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			tableModel.setDataVector(data, (showTrains ? trainColumns : stopColumns));
 		}
 	}
+	//linear interpolation between 2 floats and time
+	public static Float LinearInterpolate(Float y1,Float y2,Float mu)
+	{
+	    return(y1*(1-mu)+y2*mu);
+	}
 
+	
 	//makes the stops table (to be refactored)
 	//NF
 	private static void stopsTable(JInternalFrame container){
 		String[] columnNames = {"Stops"};
+		
 		String[][] data = {{"State Street"}, {"Gov't Center"}, {"Park Street"}, {"Harvard Ave"},
 				{"State Street"}, {"Gov't Center"}, {"Park Street"}, {"Harvard Ave"},
 				{"State Street"}, {"Gov't Center"}, {"Park Street"}, {"Harvard Ave"},
@@ -501,21 +533,44 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	//scales the map on mouse click; scales in for left click, scales out for right click
 	//NF + AG
 	public void mouseClicked(MouseEvent e) {
+		Graphics g = map.getGraphics();
 		int button = e.getButton();		
 		if (button == MouseEvent.BUTTON1) {
+			/*
+		    String name = JOptionPane.showInputDialog(null,
+					  "What is your name?",
+					  "Enter your name",
+					  JOptionPane.QUESTION_MESSAGE);
+			MapStop stop1 = new MapStop(e.getX(),e.getY());
+			//stopMap.put(name, stop1);
+			//drawNode(stopMap.get("Downtown Crossing").x,stopMap.get("Downtown Crossing").y,g);
+			//System.out.println("stopMap.put('"+name+"',new MapStop("+e.getX()+","+e.getY()+"));");
+			 */
+			
+	        g.dispose();
+	        imageLabel.repaint();
+			/*
 			System.out.println("button 1");
 			scaleX *= 1.5;
 			scaleY *= 1.5;
 			createMap(scaleX, scaleY, SCALE_TYPE);
+			*/
 		}
+		
+		/*
 		else if (button == MouseEvent.BUTTON3) {
 			System.out.println("button 3");
 			scaleX /= 1.5;
 			scaleY /= 1.5;
 			createMap(scaleX, scaleY, SCALE_TYPE);
 		}
+		*/
 
 	}
+    public static void drawNode(int x, int y, Graphics g)
+    {       g.setColor(Color.red);
+            g.fillOval(x-9, y-9, 18, 18);
+    }
 	//sets the location of the map using the mouse coordinates
 	//NF
 	public void mouseDragged(MouseEvent e) {		
@@ -547,7 +602,57 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		} 
 
 	}
-
+	
+	public static void pushHash(){
+		stopMap.put("Oak Grove",new MapStop(799,77));
+		stopMap.put("Malden",new MapStop(798,143));
+		stopMap.put("Wellington",new MapStop(799,214));
+		stopMap.put("Sullivan Square",new MapStop(799,298));
+		stopMap.put("Community College",new MapStop(801,377));
+		stopMap.put("North Station",new MapStop(813,471));
+		stopMap.put("Chinatown",new MapStop(724,837));
+		stopMap.put("NE Medical Center",new MapStop(684,872));
+		stopMap.put("Back Bay",new MapStop(652,907));
+		stopMap.put("Mass Ave",new MapStop(616,944));
+		stopMap.put("Ruggles",new MapStop(579,979));
+		stopMap.put("Roxbury Crossing",new MapStop(544,1011));
+		stopMap.put("Jackson Square",new MapStop(506,1049));
+		stopMap.put("Stony Brook",new MapStop(472,1085));
+		stopMap.put("Green Street",new MapStop(433,1123));
+		stopMap.put("Forest Hills",new MapStop(400,1158));
+		stopMap.put("Downtown Crossing",new MapStop(798,761));
+		stopMap.put("State",new MapStop(870,681));
+		stopMap.put("Alewife",new MapStop(165,321));
+		stopMap.put("Davis",new MapStop(253,321));
+		stopMap.put("Porter",new MapStop(374,343));
+		stopMap.put("Harvard",new MapStop(453,417));
+		stopMap.put("Central",new MapStop(521,487));
+		stopMap.put("Kendall/MIT",new MapStop(600,565));
+		stopMap.put("Charles/MGH",new MapStop(672,638));
+		stopMap.put("Park St",new MapStop(728,691));
+		stopMap.put("South Station",new MapStop(882,846));
+		stopMap.put("Broadway",new MapStop(901,942));
+		stopMap.put("Andrew",new MapStop(899,1021));
+		stopMap.put("JFK/UMass",new MapStop(901,1104));
+		stopMap.put("North Quincy",new MapStop(1075,1422));
+		stopMap.put("Wollaston",new MapStop(1147,1496));
+		stopMap.put("Quincy Center",new MapStop(1222,1569));
+		stopMap.put("Quincy Adams",new MapStop(1292,1639));
+		stopMap.put("Braintree",new MapStop(1314,1794));
+		stopMap.put("Bowdoin",new MapStop(746,565));
+		stopMap.put("Government Center",new MapStop(798,619));
+		stopMap.put("Aquarium",new MapStop(936,621));
+		stopMap.put("Maverick",new MapStop(1052,505));
+		stopMap.put("Airport",new MapStop(1111,448));
+		stopMap.put("Wood Island",new MapStop(1161,399));
+		stopMap.put("Orient Heights",new MapStop(1214,345));
+		stopMap.put("Suffolk Downs",new MapStop(1267,292));
+		stopMap.put("Beachmont",new MapStop(1320,238));
+		stopMap.put("Revere Beach",new MapStop(1371,186));
+		stopMap.put("Wonderland",new MapStop(1435,124));
+		
+	}
+	
 	@Override
 	public void mouseReleased(MouseEvent arg0) {
 
@@ -560,6 +665,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	}
 
 	//returns an array of strings from min to max
+	//NF
 	public String[] getTime(int min, int max){
 		String[] time = new String[max];
 		for(int i =0; i<time.length;i++){

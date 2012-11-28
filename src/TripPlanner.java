@@ -245,7 +245,6 @@ public abstract class TripPlanner {
 			temp = mapper.convertValue(o, List.class);
 		return temp;
 	}
-
 	// Generates the list of stops from the included stops file
 	// AG
 	public static void generateStops() {
