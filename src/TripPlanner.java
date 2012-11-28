@@ -245,12 +245,13 @@ public abstract class TripPlanner {
 			temp = mapper.convertValue(o, List.class);
 		return temp;
 	}
+
 	// Generates the list of stops from the included stops file
 	// AG
 	public static void generateStops() {
 		try {
 			JsonFactory f = new JsonFactory();
-			JsonParser jp = f.createJsonParser(new File("stops.json"));
+			JsonParser jp = f.createJsonParser(new File("stopsAdjacent.json"));
 			// advance stream to START_ARRAY first:
 			jp.nextToken();
 			// and then each time, advance to opening START_OBJECT
