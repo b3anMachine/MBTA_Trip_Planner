@@ -1,3 +1,4 @@
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -13,15 +14,16 @@ import java.util.Map;
  */
 public class TrainGraph {
 	
-	private Map<Stop, LinkedList<Integer>> adjacent;
+	private Map<Integer, LinkedList<Integer>> adjacent;
 	
 	public TrainGraph(LinkedList<Stop> stops) {
+		// Constructs the graph we will use for route planning. 
+		//  Maps the stop ID to the IDs of those next to it.
+		this.adjacent = new HashMap<Integer, LinkedList<Integer>>();
 		int size = stops.size();
-		int counter = 0;
-		while(counter <= size) {
-			Stop stop = stops.get(counter);
-			counter++;
-			adjacent.put(stop, stop.NextTo);
+		for(int i = 0; i< size; i++) {
+			Stop stop = stops.get(i);
+			this.adjacent.put(stop.stopID, stop.NextTo);
 		}
 	}
 	

@@ -265,5 +265,7 @@ public abstract class TripPlanner {
 		catch (Exception e) {
 			e.printStackTrace();
 		}
+		
+		TrainGraph graph = new TrainGraph(stops);
 	}
 }
