@@ -105,7 +105,7 @@
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "State St. Station",
-		"NextTo": ["70021", "20025", "70042"]
+		"NextTo": ["70021", "70025", "70042"]
 	},
 	{
 		"Line": "Orange",

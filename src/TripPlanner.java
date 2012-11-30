@@ -5,6 +5,7 @@ import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 import java.util.TimerTask;
 import java.util.Timer;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -125,7 +126,7 @@ public abstract class TripPlanner {
 		view = new Views(liveLines, stops);
 
 		// Sets up timer to update trains every 10 seconds
-		//  CM
+		// CM
 		Timer updateTimer = new Timer();
 
 		class Updater extends TimerTask{
@@ -140,13 +141,19 @@ public abstract class TripPlanner {
 					this.cancel();
 				}
 			}
-		}		
+		}
 		TimerTask updateTask = new Updater();
 		updateTimer.schedule(updateTask, TIMER_DELAY, REPEAT_TIME);
 
 		System.out.println(blue.toString());
 		System.out.println(red.toString());
 		System.out.println(orange.toString());
+		
+		Stack<Integer> results = new Stack<Integer>();
+		graph.depthFirstSearch(70093, 70060, results);
+		for (int r : results) {
+			System.out.println(getStopName(r));
+		}
 	}
 
 	// Updates all train lines
@@ -192,7 +199,6 @@ public abstract class TripPlanner {
 
 		return line;
 	}
-
 
 	/**
 	 * Deal with Objects received from JSON
@@ -270,5 +276,18 @@ public abstract class TripPlanner {
 		}
 		
 		graph = new TrainGraph(stops);
+	}
+	
+	/**
+	 * Returns the name of a stop
+	 * @author AG
+	 * **/
+	public static String getStopName(int stopID) {
+		String stopName = "";
+		for (Stop s : stops) {
+			if (s.stopID == stopID)
+				stopName = s.stop_name;
+		}
+		return stopName;
 	}
 }
