@@ -22,7 +22,7 @@ public abstract class TripPlanner {
 
 	// Train Graph
 	private static TrainGraph graph;
-	
+
 	// Whether we're using live data or not
 	private static boolean liveData;
 	// Live Lines
@@ -118,6 +118,13 @@ public abstract class TripPlanner {
 		testBlue = new TrainLine();
 		testOrange = new TrainLine();
 		testLines = new LinkedList<TrainLine>();
+		testOrange = updateLine(TEST_ORANGE, orange);
+		testRed = updateLine(TEST_RED, red);
+		testBlue = updateLine(TEST_BLUE, blue);
+		testLines.add(testOrange);
+		testLines.add(testRed);
+		testLines.add(testBlue);
+
 		// Sets default to use live data instead of  test data
 		liveData = true;
 
@@ -125,8 +132,23 @@ public abstract class TripPlanner {
 		update();
 		view = new Views(liveLines, stops);
 
-		// Sets up timer to update trains every 10 seconds
-		// CM
+		createUpdateTask();
+
+		Stack<Integer> results = new Stack<Integer>();
+		graph.depthFirstSearch(70093, 70059, results);
+		LinkedList<Stop> path = new LinkedList<Stop>();
+		for (int r : results) {
+			String stopName = getStopName(r);
+			Stop s = getStopByName(stopName);
+			System.out.println(stopName);
+			path.add(s);
+		}
+		Views.drawPath(path);
+	}
+
+	// Sets up timer to update trains every 10 seconds
+	// CM and AG and NF
+	private static void createUpdateTask() {
 		Timer updateTimer = new Timer();
 
 		class Updater extends TimerTask{
@@ -134,26 +156,13 @@ public abstract class TripPlanner {
 				if (liveData) {
 					TripPlanner.update();
 					view.setLines(liveLines);
-					System.out.println(blue.toString());
-					System.out.println(red.toString());
-					System.out.println(orange.toString());
-				} else {
-					this.cancel();
 				}
+				//else
+				//	this.cancel();
 			}
 		}
 		TimerTask updateTask = new Updater();
 		updateTimer.schedule(updateTask, TIMER_DELAY, REPEAT_TIME);
-
-		System.out.println(blue.toString());
-		System.out.println(red.toString());
-		System.out.println(orange.toString());
-		
-		Stack<Integer> results = new Stack<Integer>();
-		graph.depthFirstSearch(70093, 70060, results);
-		for (int r : results) {
-			System.out.println(getStopName(r));
-		}
 	}
 
 	// Updates all train lines
@@ -165,6 +174,20 @@ public abstract class TripPlanner {
 		liveLines.add(orange);
 		liveLines.add(red);
 		liveLines.add(blue);
+	}
+
+	// Switches between live and test data
+	public static void toggleLiveData() {
+		if (liveData) {
+			liveData = false;
+			view.setLines(testLines);
+		}
+		else {
+			liveData = true;
+			update();
+			view.setLines(liveLines);
+			//createUpdateTask();
+		}
 	}
 
 	// Update and return given train line with the Jackson parser
@@ -183,10 +206,9 @@ public abstract class TripPlanner {
 			//System.out.println(trainData.toString());
 			// Go inside the wrapper
 			Object tripListObj = getFromMap(trainData, TRIP_LIST_KEY);
-			System.out.println(tripListObj.toString());
 
 			line = new TrainLine(tripListObj);
-		} 
+		}
 		catch (JsonParseException e) {
 			e.printStackTrace();
 		} 
@@ -210,13 +232,16 @@ public abstract class TripPlanner {
 	static Object getFromMap(Object map, String key) {
 		if (map instanceof Map<?,?>) {
 			Map<?,?> castMap = (Map<?,?>) map;
-			if (castMap.containsKey(key))
+			if (castMap.containsKey(key)) {
 				return castMap.get(key);
-			else
+			}
+			else {
 				return null;
+			}
 		}
-		else
+		else {
 			return null;
+		}
 	}
 
 	// Return given object as an int
@@ -267,20 +292,20 @@ public abstract class TripPlanner {
 			while (jp.nextToken() == JsonToken.START_OBJECT) {
 				Stop stop = mapper.readValue(jp, Stop.class);
 				stops.add(stop);
-				stop.printStop();
+				//stop.printStop();
 				// after binding, stream points to closing END_OBJECT
 			}
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		graph = new TrainGraph(stops);
 	}
-	
+
 	/**
 	 * Returns the name of a stop
-	 * @author AG
+	 * @author NF and AG
 	 * **/
 	public static String getStopName(int stopID) {
 		String stopName = "";
@@ -289,5 +314,16 @@ public abstract class TripPlanner {
 				stopName = s.stop_name;
 		}
 		return stopName;
+	}
+
+	//gets stop by name (String)
+	//NF
+	public static Stop getStopByName(String name){
+		Stop tempStop = new Stop();
+		for(Stop s : stops){
+			if(s.stop_name.equals(name))
+				tempStop = s;
+		}
+		return tempStop;		
 	}
 }
