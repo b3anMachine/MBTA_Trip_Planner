@@ -16,8 +16,6 @@ public class Train {
 	
 	// Train ID
 	private String trainID;
-	// Train's line
- 	private String line;
  	// Train's destination
  	private String destination;
  	// Train's position
@@ -56,10 +54,6 @@ public class Train {
 	public String getTrainID() {
 		return trainID;
 	}
-	/*
-	public String getTrainLine() {
-		return line;
-	}*/
 	
 	public String getTrainDestination () {
 		return destination;

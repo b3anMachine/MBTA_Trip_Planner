@@ -9,7 +9,6 @@ public class Stop {
 	public String stop_name;
 	public boolean StartOfLine;
 	public boolean EndOfLine;
-	public String Direction;
 	public LinkedList<Integer> NextTo;
 	
 	public Stop() {}
@@ -18,6 +17,6 @@ public class Stop {
 	// AG
 	public void printStop() {
 		System.out.println("Line: "+Line+", Station: "+StationName+"," +
-				" Stop ID: "+stopID+", Direction: "+Direction+", NextTo: "+NextTo.toString());
+				" Stop ID: "+stopID+", NextTo: "+NextTo.toString());
 	}
 }

@@ -1,40 +1,44 @@
 import java.awt.*;
 import javax.swing.*; 
 import java.io.File;
-import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.math.*;
 import javax.imageio.ImageIO;
 import javax.swing.event.*;
 import javax.swing.table.*;
 import java.awt.image.BufferedImage;
-//Create a simple GUI window
+
+/**
+ * Create the main GUI of our application
+ * **/
 public class Views implements MouseListener, TableModelListener, MouseMotionListener{
-	
-	public static HashMap<String,MapStop> stopMap = new HashMap<String,MapStop>(70);  
-	
+
+	/**
+	 * Map declarations
+	 * **/
+	public static HashMap<String,MapStop> stopMap = new HashMap<String,MapStop>(70);
 	public static final String IMAGE_PATH = "mbta.bmp";
 	public static BufferedImage map;
 	public static JLabel imageLabel;
-	public static int scaleX = 800;
-	public static int scaleY = 1000;
-	public static final int SCALE_TYPE = 3;
+
 	public static LinkedList<TrainLine> trainLines = new LinkedList<TrainLine>();
 	private static LinkedList<Stop> stops;
+
+	/**
+	 * Table declarations
+	 * **/
 	public static JTable table;
 	public static DefaultTableModel tableModel;
 	// Column names for the list of trains
-	public static String[] trainColumns = {"ID", "Line", "Location", "Destination", "Realtime"};
+	public static String[] trainColumns = {"ID", "Line", "Location", "Destination"};
 	// Column names for the list of stops
-	public static String[] stopColumns = {"Line","Name","Direction","Stop ID"};
-	public static boolean showTrains = false;
+	public static String[] stopColumns = {"Line", "Name", "Stop ID"};
+	public static boolean showTrains = true;
 	public enum viewState {
 		VIEWING_TRAINS,
 		VIEWING_STOPS,
@@ -42,23 +46,25 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	}
 
 	int draggedAtX, draggedAtY;
-	
+
 	// Views constructor
-	public Views(LinkedList<TrainLine> lines, LinkedList<Stop> stops) {
-		this.stops = stops;
-		setLines(lines);
+	public Views(LinkedList<TrainLine> lines, LinkedList<Stop> s) {
+		stops = s;
+		trainLines = lines;
 		createWindow(trainLines);
 		pushHash();
+		update();
 	}
 
+	// Sets the lines
 	public void setLines(LinkedList<TrainLine> lines) {
 		// Set the trainLines to the given list of lines
 		trainLines = lines;
-		// Update the table data
-		updateTableData();
+		// Update table and map
+		update();
 	}
 
-	//creates the GUI
+	//creates the Window
 	//NF
 	public void createWindow(LinkedList<TrainLine> lines) {
 		//Create and set up the window.
@@ -81,7 +87,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		JSpinner pickDepHour = new JSpinner(hours2);
 		JSpinner pickArrMin = new JSpinner(mins1);
 		JSpinner pickDepMin = new JSpinner(mins2);
-		
+
 
 		/**
 		 * The Buttons
@@ -93,33 +99,33 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		listTrains.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				showTrains = true;
-				updateTableData();
+				update();
 			}
 		});
-		
+
 		// List Stops button
 		JButton listStops = new JButton("List Stops");
 		listStops.setBackground(new Color(230,230,230));
 		listStops.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				showTrains = false;
-				updateTableData();
+				update();
 			}
 		});
-		
+
 		// Test System button
 		JButton testSystem = new JButton("Test System");
 		testSystem.setBackground(new Color(230,230,230));
-		
+
 		// Add Stop button
 		JButton addStop = new JButton("Add Stop");
 		addStop.setBackground(new Color(230,230,230));
-		
+
 		// Calculate Route button
 		JButton calcRoute = new JButton("Calculate Route");
 		calcRoute.setBackground(new Color(230,230,230));
 
-		
+
 
 		String[] stops = {"stop a", "stop b", "stop c", "stop d", "stop e", "stop f"};
 
@@ -171,8 +177,6 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		//define all checkboxes
 		JCheckBox orderedList = new JCheckBox("Ordered List");
 		orderedList.setBackground(new Color(230,230,230));
-		JCheckBox drawTrains = new JCheckBox("Show Trains on Map");
-		drawTrains.setBackground(new Color(230,230,230));
 
 		GridBagLayout gridbag = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
@@ -324,16 +328,13 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 		//add to left jframe
 		topLeft.add(testSystem);
-		createMap(scaleX, scaleY, SCALE_TYPE);
+		createMap();
 		middleLeft.add(imageLabel);
-		bottomLeft.add(drawTrains);
+		//bottomLeft.add(drawTrains);
 
-		//add to middle jframe
-		//middle.add(listTrains);
-		//middle.add(listStops);		 
+		//add to middle jframe		 
 		createTable(bottomMiddle, lines);
-		stopsTable(right3);
-		//topRight.add(textLabel, BorderLayout.NORTH); 		 
+		stopsTable(right3);		 
 		right1.add(orderedList);
 
 		right2.add(addStop);
@@ -364,29 +365,25 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		frame.add(right);
 
 		//pack the frames neatly		
-		frame.pack(); 
-		//topRight.setSize(100,100);
-		//middle.pack();
+		frame.pack();
 		frame.setSize(1200,600);
 	}
-	//loads map
-	public static void createMap(int width, int height, int type) {
-		createImage(imageLabel, IMAGE_PATH, width, height, type);
-	}
 
-	//loads an image from url to a jlabel with certain dimensions and a scaling type
-	//NF
-	public static void createImage(JLabel label, String url, int width, int height, int type){
+	/**
+	 * Loads map
+	 * @author NF
+	 * **/
+	public static void createMap() {
 		try 
 		{
 			// Read from a file
-			File FileToRead = new File(url);
+			File FileToRead = new File(IMAGE_PATH);
 			//Recognize file as image
 			map = ImageIO.read(FileToRead);
 			//Image pic = Picture.getScaledInstance(width, height, type);
 			ImageIcon icon = new ImageIcon(map);
 			//Show the image inside the label
-			label.setIcon(icon);
+			imageLabel.setIcon(icon);
 		} 
 		catch (Exception e) 
 		{
@@ -419,7 +416,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		table.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY, 1));
 		table.setShowVerticalLines(true);
 		table.setSize(700,700);
-		updateTableData();
+		update();
 		JScrollPane scrollPane = new JScrollPane(table); 
 		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 		//table.setFillsViewportHeight(true);
@@ -429,90 +426,90 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		//container.add(table);
 	}
 
-
-	// Returns updated data for the table based on lines
-	//  CM and AG
-	public static void updateTableData() {
-		
-		int counter = 0;
+	/**
+	 * Updates table and map based on lines and trains
+	 * @author AG, CM and NF
+	 **/
+	public static void update() {
+		// Table data
 		Object[][] data;
 
-		// If the trains data should be shown
+		Graphics g = map.getGraphics();
+
+		// If the trains should be shown
 		if (showTrains) {
-			Graphics g = map.getGraphics();
-
-			// Get number of all trains
+			// Number of trains
+			int numTrains = 0;
+			// Get the total number of trains
 			for (TrainLine l : trainLines) {
-				for (Train t : l.getTrains()) {
-					counter++;
-				}
+				numTrains += l.getTrains().size();
 			}
-			// initialize length of data array
-			data = new Object[counter][];
-			// reset counter
-			counter = 0;
-			// iterate through lines
-			for (TrainLine line : trainLines) {
-				String lineName = line.getLine();
-				// Get list of trains for each line
-				LinkedList<Train> trains = line.getTrains();
-				for (int t = 0; t < trains.size(); t++) {
-					Position pos = trains.get(t).getTrainPosition();
-					Double lat = (double)((int)(pos.getLat()*100))/100;
-					Double lon = (double)((int)(pos.getLong()*100))/100;
-					String posString;
-					/*
-					if (lat.equals(0.0) && lon.equals(0.0))
-						posString = "none";
-					else
-						posString = "("+lat+","+lon+")";
-					*/
-					posString = trains.get(t).getTrainPredictions().get(0).getName();
-					Object[] row = { trains.get(t).getTrainID(), lineName, 
-							posString, trains.get(t).getTrainDestination(), new Date().getTime() };
-					
-					//drawNode(stopMap.get("Downtown Crossing").x,stopMap.get("Downtown Crossing").y,g);
-					if(!(stopMap.get(posString)==null)){
-					drawNode(stopMap.get(posString).x,stopMap.get(posString).y,g);
-					}
-					
-					//drawNode(100,100,g);
-					
-					data[counter] = row;
-					counter++;
 
-				}
-			}
-			
-	        g.dispose();
-	        imageLabel.repaint();
+			// initialize length of data array
+			data = new Object[numTrains][];
 		}
+		
 		// If the stops should be shown
 		else {
+			// Set data array to size of the stops list
 			data = new Object[stops.size()][];
-			counter = 0;
+			// Iterate through stops
 			for (Stop s : stops) {
-				Object[] row = { s.Line, s.StationName, s.Direction, s.stopID };
-				data[counter] = row;
-				counter++;
+				// Create row to hold stop info
+				Object[] row = { s.Line, s.stop_name, s.stopID };
+				// Add row to data array
+				data[stops.indexOf(s)] = row;
 			}
 		}
+
+		// Counter for rows in data array
+		int counter = 0;
+		// iterate through lines
+		for (TrainLine line : trainLines) {
+			String lineName = line.getLine();
+			// Get list of trains for each line
+			LinkedList<Train> trains = line.getTrains();
+			for (int t = 0; t < trains.size(); t++) {
+				String posString;
+				posString = trains.get(t).getTrainPredictions().get(0).getName();
+				Object[] row = { trains.get(t).getTrainID(), lineName, 
+						posString, trains.get(t).getTrainDestination() };
+
+				// Draw trains on map
+				if(stopMap.get(posString) != null){
+					drawNode(stopMap.get(posString).x, stopMap.get(posString).y, g);
+				}
+				
+				// Add trains to data array for table
+				if (showTrains) {
+					data[counter] = row;
+					counter++;
+				}
+			}
+		}
+
+		// Set columns to trains or stops
 		if (tableModel != null) {
 			tableModel.setDataVector(data, (showTrains ? trainColumns : stopColumns));
 		}
+
+		// Dispose of graphics object
+		g.dispose();
+		// Invalidate the imageLabel
+		imageLabel.repaint();
 	}
 	//linear interpolation between 2 floats and time
 	public static Float LinearInterpolate(Float y1,Float y2,Float mu)
 	{
-	    return(y1*(1-mu)+y2*mu);
+		return(y1*(1-mu)+y2*mu);
 	}
 
-	
+
 	//makes the stops table (to be refactored)
 	//NF
 	private static void stopsTable(JInternalFrame container){
 		String[] columnNames = {"Stops"};
-		
+
 		String[][] data = {{"State Street"}, {"Gov't Center"}, {"Park Street"}, {"Harvard Ave"},
 				{"State Street"}, {"Gov't Center"}, {"Park Street"}, {"Harvard Ave"},
 				{"State Street"}, {"Gov't Center"}, {"Park Street"}, {"Harvard Ave"},
@@ -546,17 +543,17 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			//drawNode(stopMap.get("Downtown Crossing").x,stopMap.get("Downtown Crossing").y,g);
 			//System.out.println("stopMap.put('"+name+"',new MapStop("+e.getX()+","+e.getY()+"));");
 			 */
-			
-	        g.dispose();
-	        imageLabel.repaint();
+
+			g.dispose();
+			imageLabel.repaint();
 			/*
 			System.out.println("button 1");
 			scaleX *= 1.5;
 			scaleY *= 1.5;
 			createMap(scaleX, scaleY, SCALE_TYPE);
-			*/
+			 */
 		}
-		
+
 		/*
 		else if (button == MouseEvent.BUTTON3) {
 			System.out.println("button 3");
@@ -564,13 +561,13 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			scaleY /= 1.5;
 			createMap(scaleX, scaleY, SCALE_TYPE);
 		}
-		*/
+		 */
 
 	}
-    public static void drawNode(int x, int y, Graphics g)
-    {       g.setColor(Color.red);
-            g.fillOval(x-9, y-9, 18, 18);
-    }
+	public static void drawNode(int x, int y, Graphics g)
+	{       g.setColor(Color.red);
+	g.fillOval(x-9, y-9, 18, 18);
+	}
 	//sets the location of the map using the mouse coordinates
 	//NF
 	public void mouseDragged(MouseEvent e) {		
@@ -602,7 +599,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		} 
 
 	}
-	
+
 	public static void pushHash(){
 		stopMap.put("Oak Grove",new MapStop(799,77));
 		stopMap.put("Malden",new MapStop(798,143));
@@ -650,9 +647,9 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		stopMap.put("Beachmont",new MapStop(1320,238));
 		stopMap.put("Revere Beach",new MapStop(1371,186));
 		stopMap.put("Wonderland",new MapStop(1435,124));
-		
+
 	}
-	
+
 	@Override
 	public void mouseReleased(MouseEvent arg0) {
 

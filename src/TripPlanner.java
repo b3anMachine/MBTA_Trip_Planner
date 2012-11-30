@@ -19,6 +19,9 @@ public abstract class TripPlanner {
 	private static final int REPEAT_TIME = 10000; // Milliseconds (10)
 	private static final int TIMER_DELAY = 10000; // Milliseconds (10)
 
+	// Train Graph
+	private static TrainGraph graph;
+	
 	// Whether we're using live data or not
 	private static boolean liveData;
 	// Live Lines
@@ -266,6 +269,6 @@ public abstract class TripPlanner {
 			e.printStackTrace();
 		}
 		
-		TrainGraph graph = new TrainGraph(stops);
+		graph = new TrainGraph(stops);
 	}
 }

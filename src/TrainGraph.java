@@ -1,11 +1,5 @@
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-/**
- * 
- */
 
 /**
  * @author CM
@@ -14,7 +8,7 @@ import java.util.Map;
  */
 public class TrainGraph {
 	
-	private Map<Integer, LinkedList<Integer>> adjacent;
+	private HashMap<Integer, LinkedList<Integer>> adjacent;
 	
 	public TrainGraph(LinkedList<Stop> stops) {
 		// Constructs the graph we will use for route planning. 
