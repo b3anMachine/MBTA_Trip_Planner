@@ -25,7 +25,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	public static final String IMAGE_PATH = "mbta.bmp";
 	public static BufferedImage map;
 	public static JLabel imageLabel;
-	public static Graphics2D g;
+	static JInternalFrame middleLeft;
 
 	public static final int MAX_TIME = 1000;
 	public static final int MIN_TIME = 60; 
@@ -57,13 +57,12 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		trainLines = lines;
 		pushHash();
 		createWindow();
-		g = (Graphics2D)map.getGraphics();
 		update();
 	}
 
 	// Sets the lines
 	public void setLines(LinkedList<TrainLine> lines) {
-		trainLines.clear();
+		//trainLines.clear();
 		// Set the trainLines to the given list of lines
 		trainLines = lines;
 		// Update table and map
@@ -75,6 +74,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	public void createWindow() {
 		//Create and set up the window.
 		JFrame frame = new JFrame("MBTA Trip Planner"); 
+		frame.setExtendedState(Frame.MAXIMIZED_BOTH);
 		frame.setBackground(new Color(100,100,100));
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
 
@@ -293,7 +293,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		gridbag.setConstraints(topLeft, c);
 		left.add(topLeft);
 
-		JInternalFrame middleLeft = newFrame();
+		middleLeft = newFrame();
 		//middleLeft.setBackground(new Color(255,255,255));
 		middleLeft.setLayout(new FlowLayout());
 		//middleLeft.setMinimumSize(new Dimension(100,100));
@@ -381,7 +381,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 		//pack the frames neatly		
 		frame.pack();
-		frame.setSize(1200,600);
+		frame.setSize(1920,1080);
 	}
 
 	/**
@@ -393,16 +393,15 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		{
 			// Read from a file
 			File FileToRead = new File(IMAGE_PATH);
-			//Recognize file as image
+			// Recognize file as image
 			map = ImageIO.read(FileToRead);
-			//Image pic = Picture.getScaledInstance(width, height, type);
 			ImageIcon icon = new ImageIcon(map);
-			//Show the image inside the label
+			// Show the image inside the label
 			imageLabel.setIcon(icon);
 		} 
 		catch (Exception e) 
 		{
-			//Display a message if something goes wrong
+			// Display a message if something goes wrong
 			JOptionPane.showMessageDialog( null, e.toString() );
 		}
 	}
@@ -449,7 +448,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		// Table data
 		Object[][] data;
 
-		g = (Graphics2D)map.getGraphics();
+		Graphics2D g = (Graphics2D)map.getGraphics();
 
 		// If the trains should be shown
 		if (showTrains) {
@@ -527,7 +526,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		
 		// Dispose of graphics object
 		g.dispose();
-		// Invalidate the imageLabel
+		// Repaint the imageLabel
 		imageLabel.repaint();
 	}
 
@@ -597,10 +596,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			//stopMap.put(name, stop1);
 			//drawNode(stopMap.get("Downtown Crossing").x,stopMap.get("Downtown Crossing").y,g);
 			System.out.println("stopMap.put('"+name+"',new MapStop("+e.getX()+","+e.getY()+"));");
-
-
-			g.dispose();
-			imageLabel.repaint();
+			
 			/*
 			System.out.println("button 1");
 			scaleX *= 1.5;
@@ -622,8 +618,8 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 	//draws trains
 	//NF
-	public static void drawTrain(String pos, String dest, int timeLeft) {   
-		g = (Graphics2D)map.getGraphics();
+	public static void drawTrain(String pos, String dest, int timeLeft) {
+		Graphics2D g = (Graphics2D)map.getGraphics();
 		
 		int x = 0;
 		int y = 0;	
@@ -717,7 +713,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		stopMap.put("FOREST HILLS",new MapStop(400,1158));
 		stopMap.put("DOWNTOWN CROSSING",new MapStop(798,761));
 		stopMap.put("STATE",new MapStop(870,681));
-		stopMap.put("HAYMARKET",new MapStop(870,590));
+		stopMap.put("HAYMARKET",new MapStop(867,561));
 		stopMap.put("ALEWIFE",new MapStop(165,321));
 		stopMap.put("DAVIS",new MapStop(253,321));
 		stopMap.put("PORTER",new MapStop(374,343));
@@ -770,8 +766,8 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		return time;
 	}
 
-	public static void drawPath(LinkedList<Stop> path) {
-		g = (Graphics2D)map.getGraphics();
+	public static void drawPath(LinkedList<Stop> path, Color color) {
+		Graphics2D g = (Graphics2D)map.getGraphics();
 		for (int s = 0; s < path.size()-1; s++) {
 			MapStop startPos = stopMap.get(path.get(s).stop_name.toUpperCase());
 			int startX = startPos.x;
@@ -782,7 +778,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			int endY = endPos.y;
 
 			g.setStroke(new BasicStroke(10F));
-			g.setColor(Color.magenta);
+			g.setColor(color);
 			g.drawLine(startX, startY, endX, endY);
 			imageLabel.repaint();
 		}

@@ -294,7 +294,7 @@
 		"StartOfLine": "true",
 		"EndOfLine": "false",
 		"stop_name": "Davis",
-		"NextTo": ["70063", "70065"]
+		"NextTo": ["70061", "70065"]
 	},
 	{
 		"Line": "Red",

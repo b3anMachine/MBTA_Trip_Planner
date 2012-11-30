@@ -1,3 +1,4 @@
+import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -135,7 +136,13 @@ public abstract class TripPlanner {
 		createUpdateTask();
 
 		Stack<Integer> results = new Stack<Integer>();
-		graph.depthFirstSearch(70093, 70059, results);
+		LinkedList<Integer> goals = new LinkedList<Integer>();
+		goals.add(70061);
+		goals.add(70093);
+		goals.add(70036);
+		goals.add(70059);
+		goals.add(70037);
+		results = graph.multiSearch(goals);
 		LinkedList<Stop> path = new LinkedList<Stop>();
 		for (int r : results) {
 			String stopName = getStopName(r);
@@ -143,7 +150,8 @@ public abstract class TripPlanner {
 			System.out.println(stopName);
 			path.add(s);
 		}
-		Views.drawPath(path);
+		Color newColor = Color.white;
+		Views.drawPath(path, new Color(newColor.getRed(),newColor.getGreen(),newColor.getBlue(),100));
 	}
 
 	// Sets up timer to update trains every 10 seconds

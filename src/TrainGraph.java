@@ -5,7 +5,6 @@ import java.util.Stack;
 /**
  * 
  * Graph class for route planning
- * 
  * @author CM and AG
  * 
  */
@@ -32,22 +31,39 @@ public class TrainGraph {
 	public boolean depthFirstSearch(int start, int goal, Stack<Integer> results) {
 		// Prevent infinite loops
 		if (results.contains(start))
-		    return false;
+			return false;
 
 		// Add start to results
 		results.push(start);
 
 		// The goal has been reached
 		if (start == goal)
-		    return true;
-		
+			return true;
+
 		for (int v : adjacent.get(start)) {
-		    if (depthFirstSearch(v, goal, results))
-		        return true;
+			if (depthFirstSearch(v, goal, results))
+				return true;
 		}
 
 		// No path was found
 		results.pop();
 		return false; 
+	}
+
+	// Depth First Search
+	// AG
+	public Stack<Integer> multiSearch(LinkedList<Integer> goals) {
+		Stack<Integer> results = new Stack<Integer>();
+		
+		for (int g = 0; g < goals.size()-1; g++) {
+			Stack<Integer> tempResults = new Stack<Integer>();
+			
+			depthFirstSearch(goals.get(g),goals.get(g+1),tempResults);
+			
+			results.addAll(tempResults);
+		}
+
+		// No path was found
+		return results; 
 	}
 }
