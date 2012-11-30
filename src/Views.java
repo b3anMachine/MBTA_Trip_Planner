@@ -26,6 +26,9 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	public static BufferedImage map;
 	public static JLabel imageLabel;
 
+	public static final int MAX_TIME = 1000;
+	public static final int MIN_TIME = 60; 
+
 	public static LinkedList<TrainLine> trainLines = new LinkedList<TrainLine>();
 	private static LinkedList<Stop> stops;
 
@@ -51,8 +54,8 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	public Views(LinkedList<TrainLine> lines, LinkedList<Stop> s) {
 		stops = s;
 		trainLines = lines;
-		createWindow(trainLines);
 		pushHash();
+		createWindow();
 		update();
 	}
 
@@ -66,7 +69,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 	//creates the Window
 	//NF
-	public void createWindow(LinkedList<TrainLine> lines) {
+	public void createWindow() {
 		//Create and set up the window.
 		JFrame frame = new JFrame("MBTA Trip Planner"); 
 		frame.setBackground(new Color(100,100,100));
@@ -333,8 +336,8 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		//bottomLeft.add(drawTrains);
 
 		//add to middle jframe		 
-		createTable(bottomMiddle, lines);
-		stopsTable(right3);		 
+		createTable(bottomMiddle);
+		stopsTable(right3);
 		right1.add(orderedList);
 
 		right2.add(addStop);
@@ -408,7 +411,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		return newFrame(2,new Color(230,230,230));
 	}
 	//takes an internal jframe and create a table in it
-	private void createTable(JInternalFrame container, LinkedList<TrainLine> lines){
+	private void createTable(JInternalFrame container){
 
 		tableModel = new DefaultTableModel();
 		tableModel.addTableModelListener(this);
@@ -448,7 +451,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			// initialize length of data array
 			data = new Object[numTrains][];
 		}
-		
+
 		// If the stops should be shown
 		else {
 			// Set data array to size of the stops list
@@ -470,16 +473,19 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			// Get list of trains for each line
 			LinkedList<Train> trains = line.getTrains();
 			for (int t = 0; t < trains.size(); t++) {
-				String posString;
-				posString = trains.get(t).getTrainPredictions().get(0).getName();
+				String nextString = trains.get(t).getTrainPredictions().get(0).getName();
+				int timeLeft = trains.get(t).getTrainPredictions().get(0).getTime();
+				String destString = trains.get(t).getTrainDestination();
 				Object[] row = { trains.get(t).getTrainID(), lineName, 
-						posString, trains.get(t).getTrainDestination() };
+						nextString, trains.get(t).getTrainDestination() };
 
 				// Draw trains on map
-				if(stopMap.get(posString) != null){
-					drawNode(stopMap.get(posString).x, stopMap.get(posString).y, g);
+				if(stopMap.containsKey(nextString.toUpperCase()) 
+						&& stopMap.containsKey(destString.toUpperCase())
+						&& !nextString.equals(destString)) {
+					drawTrain(nextString, destString, timeLeft, g);
 				}
-				
+
 				// Add trains to data array for table
 				if (showTrains) {
 					data[counter] = row;
@@ -498,6 +504,48 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		// Invalidate the imageLabel
 		imageLabel.repaint();
 	}
+	//returns a stop's name based on stopID
+	public static String getStopName(int id){
+		String tempString = "";
+		for(Stop s : stops){
+			if(s.stopID == id)
+				tempString =  s.stop_name;
+		}
+		return tempString;
+	}
+	//gets stop by name (String)
+	//NF
+	public static Stop getStopByName(String name){
+		Stop tempStop = stops.get(1);
+		for(Stop s : stops){
+			if(s.stop_name.equals(name))
+				tempStop = s;
+		}
+		return tempStop;		
+	}
+	//returns the last stop
+	//NF
+	public static String getLastStop(Stop curStop, Stop dest){
+		String tempString = dest.stop_name;
+		if(!curStop.StartOfLine || !curStop.EndOfLine){
+			if(curStop.stopID < dest.stopID){
+				String temp2 =  getStopName(curStop.stopID - 2);
+				if(stops.contains(getStopByName(tempString))){
+					tempString = temp2;
+				}
+			}
+			if(curStop.stopID > dest.stopID){
+				String temp2 = getStopName(curStop.stopID + 2);
+				if(stops.contains(getStopByName(tempString))){
+					tempString = temp2;
+				}
+			}
+		}
+
+		return tempString;
+
+	}
+
 	//linear interpolation between 2 floats and time
 	public static Float LinearInterpolate(Float y1,Float y2,Float mu)
 	{
@@ -533,16 +581,16 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		Graphics g = map.getGraphics();
 		int button = e.getButton();		
 		if (button == MouseEvent.BUTTON1) {
-			/*
+			
 		    String name = JOptionPane.showInputDialog(null,
 					  "What is your name?",
 					  "Enter your name",
 					  JOptionPane.QUESTION_MESSAGE);
-			MapStop stop1 = new MapStop(e.getX(),e.getY());
+			//MapStop stop1 = new MapStop(e.getX(),e.getY());
 			//stopMap.put(name, stop1);
 			//drawNode(stopMap.get("Downtown Crossing").x,stopMap.get("Downtown Crossing").y,g);
-			//System.out.println("stopMap.put('"+name+"',new MapStop("+e.getX()+","+e.getY()+"));");
-			 */
+			System.out.println("stopMap.put('"+name+"',new MapStop("+e.getX()+","+e.getY()+"));");
+			 
 
 			g.dispose();
 			imageLabel.repaint();
@@ -564,9 +612,52 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		 */
 
 	}
-	public static void drawNode(int x, int y, Graphics g)
-	{       g.setColor(Color.red);
-	g.fillOval(x-9, y-9, 18, 18);
+	
+	//draws trains
+	//NF
+	public static void drawTrain(String pos, String dest, int timeLeft, Graphics g)
+	{   
+		int x = 0;
+		int y = 0;	
+		int x1 = 0;
+		int y1 = 0;
+		//int z = stopMap.get(getLastStop(getStopByName(position),getStopByName(destination))).x;
+		Stop position = getStopByName(pos);
+		Stop destination = getStopByName(dest);
+		String a = getStopName(position.stopID);
+		String b = getStopName(destination.stopID);
+		String lastStop = getLastStop(position,destination);
+		System.out.println(a + " " + b + " " + lastStop);
+
+		int x0 = stopMap.get(pos.toUpperCase()).x;
+		int y0 = stopMap.get(pos.toUpperCase()).y;
+
+		//if(stopMap.containsKey(lastStop)) {
+			x1 = stopMap.get(lastStop.toUpperCase()).x;		
+			y1 = stopMap.get(lastStop.toUpperCase()).y;
+		//}
+		System.out.println(lastStop.toUpperCase());
+		
+		
+		if(timeLeft < MIN_TIME){
+			x = x0;
+		    y = y0;
+		}
+		else if(timeLeft > MAX_TIME){
+			x = x1;
+		    y = y1;
+		}
+		else{
+			x = (x0+x1)/2;
+			y = (y0+y1)/2;
+		}
+		
+		System.out.println(x);
+		System.out.println(y);
+
+		g.setColor(Color.red);
+		g.fillOval(x-9, y-9, 18, 18);
+		//g.fillOval(stopMap.get("HAYMARKET").x - 9, stopMap.get("HAYMARKET").y-9, 18, 18);
 	}
 	//sets the location of the map using the mouse coordinates
 	//NF
@@ -601,53 +692,57 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	}
 
 	public static void pushHash(){
-		stopMap.put("Oak Grove",new MapStop(799,77));
-		stopMap.put("Malden",new MapStop(798,143));
-		stopMap.put("Wellington",new MapStop(799,214));
-		stopMap.put("Sullivan Square",new MapStop(799,298));
-		stopMap.put("Community College",new MapStop(801,377));
-		stopMap.put("North Station",new MapStop(813,471));
-		stopMap.put("Chinatown",new MapStop(724,837));
-		stopMap.put("NE Medical Center",new MapStop(684,872));
-		stopMap.put("Back Bay",new MapStop(652,907));
-		stopMap.put("Mass Ave",new MapStop(616,944));
-		stopMap.put("Ruggles",new MapStop(579,979));
-		stopMap.put("Roxbury Crossing",new MapStop(544,1011));
-		stopMap.put("Jackson Square",new MapStop(506,1049));
-		stopMap.put("Stony Brook",new MapStop(472,1085));
-		stopMap.put("Green Street",new MapStop(433,1123));
-		stopMap.put("Forest Hills",new MapStop(400,1158));
-		stopMap.put("Downtown Crossing",new MapStop(798,761));
-		stopMap.put("State",new MapStop(870,681));
-		stopMap.put("Alewife",new MapStop(165,321));
-		stopMap.put("Davis",new MapStop(253,321));
-		stopMap.put("Porter",new MapStop(374,343));
-		stopMap.put("Harvard",new MapStop(453,417));
-		stopMap.put("Central",new MapStop(521,487));
-		stopMap.put("Kendall/MIT",new MapStop(600,565));
-		stopMap.put("Charles/MGH",new MapStop(672,638));
-		stopMap.put("Park St",new MapStop(728,691));
-		stopMap.put("South Station",new MapStop(882,846));
-		stopMap.put("Broadway",new MapStop(901,942));
-		stopMap.put("Andrew",new MapStop(899,1021));
-		stopMap.put("JFK/UMass",new MapStop(901,1104));
-		stopMap.put("North Quincy",new MapStop(1075,1422));
-		stopMap.put("Wollaston",new MapStop(1147,1496));
-		stopMap.put("Quincy Center",new MapStop(1222,1569));
-		stopMap.put("Quincy Adams",new MapStop(1292,1639));
-		stopMap.put("Braintree",new MapStop(1314,1794));
-		stopMap.put("Bowdoin",new MapStop(746,565));
-		stopMap.put("Government Center",new MapStop(798,619));
-		stopMap.put("Aquarium",new MapStop(936,621));
-		stopMap.put("Maverick",new MapStop(1052,505));
-		stopMap.put("Airport",new MapStop(1111,448));
-		stopMap.put("Wood Island",new MapStop(1161,399));
-		stopMap.put("Orient Heights",new MapStop(1214,345));
-		stopMap.put("Suffolk Downs",new MapStop(1267,292));
-		stopMap.put("Beachmont",new MapStop(1320,238));
-		stopMap.put("Revere Beach",new MapStop(1371,186));
-		stopMap.put("Wonderland",new MapStop(1435,124));
-
+		stopMap.put("OAK GROVE",new MapStop(799,77));
+		stopMap.put("MALDEN",new MapStop(798,143));
+		stopMap.put("WELLINGTON",new MapStop(799,214));
+		stopMap.put("SULLIVAN",new MapStop(799,298));
+		stopMap.put("COMMUNITY COLLEGE",new MapStop(801,377));
+		stopMap.put("NORTH STATION",new MapStop(813,471));
+		stopMap.put("CHINATOWN",new MapStop(724,837));
+		stopMap.put("TUFTS MEDICAL CENTER",new MapStop(684,872));
+		stopMap.put("BACK BAY",new MapStop(652,907));
+		stopMap.put("MASS AVE",new MapStop(616,944));
+		stopMap.put("RUGGLES",new MapStop(579,979));
+		stopMap.put("ROXBURY CROSSING",new MapStop(544,1011));
+		stopMap.put("JACKSON SQUARE",new MapStop(506,1049));
+		stopMap.put("STONY BROOK",new MapStop(472,1085));
+		stopMap.put("GREEN STREET",new MapStop(433,1123));
+		stopMap.put("FOREST HILLS",new MapStop(400,1158));
+		stopMap.put("DOWNTOWN CROSSING",new MapStop(798,761));
+		stopMap.put("STATE",new MapStop(870,681));
+		stopMap.put("HAYMARKET",new MapStop(870,590));
+		stopMap.put("ALEWIFE",new MapStop(165,321));
+		stopMap.put("DAVIS",new MapStop(253,321));
+		stopMap.put("PORTER",new MapStop(374,343));
+		stopMap.put("HARVARD",new MapStop(453,417));
+		stopMap.put("CENTRAL SQUARE",new MapStop(521,487));
+		stopMap.put("KENDALL/MIT",new MapStop(600,565));
+		stopMap.put("CHARLES/MGH",new MapStop(672,638));
+		stopMap.put("PARK ST",new MapStop(728,691));
+		stopMap.put("SOUTH STATION",new MapStop(882,846));
+		stopMap.put("BROADWAY",new MapStop(901,942));
+		stopMap.put("ANDREW",new MapStop(899,1021));
+		stopMap.put("JFK/UMASS",new MapStop(901,1104));
+		stopMap.put("NORTH QUINCY",new MapStop(1075,1422));
+		stopMap.put("WOLLASTON",new MapStop(1147,1496));
+		stopMap.put("QUINCY CENTER",new MapStop(1222,1569));
+		stopMap.put("QUINCY ADAMS",new MapStop(1292,1639));
+		stopMap.put("BRAINTREE",new MapStop(1314,1794));
+		stopMap.put("BOWDOIN",new MapStop(746,565));
+		stopMap.put("GOVERNMENT CENTER",new MapStop(798,619));
+		stopMap.put("AQUARIUM",new MapStop(936,621));
+		stopMap.put("MAVERICK",new MapStop(1052,505));
+		stopMap.put("AIRPORT",new MapStop(1111,448));
+		stopMap.put("WOOD ISLAND",new MapStop(1161,399));
+		stopMap.put("ORIENT HEIGHTS",new MapStop(1214,345));
+		stopMap.put("SUFFOLK DOWNS",new MapStop(1267,292));
+		stopMap.put("BEACHMONT",new MapStop(1320,238));
+		stopMap.put("REVERE BEACH",new MapStop(1371,186));
+		stopMap.put("WONDERLAND",new MapStop(1435,124));
+		stopMap.put("SAVIN HILL",new MapStop(847,1159));
+		stopMap.put("FIELDS CORNER",new MapStop(797,1230));
+		stopMap.put("SHAWMUT",new MapStop(799,1282));
+		stopMap.put("ASHMONT",new MapStop(799,1342));
 	}
 
 	@Override
