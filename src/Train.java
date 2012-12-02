@@ -1,6 +1,5 @@
 import java.util.LinkedList;
 import java.util.List;
-
 /** 
  * Class to hold train information
  * Train objects to be generated from JSON data.

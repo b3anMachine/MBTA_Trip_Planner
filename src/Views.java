@@ -12,7 +12,9 @@ import java.util.LinkedList;
 import javax.imageio.ImageIO;
 import javax.swing.event.*;
 import javax.swing.table.*;
-
+import java.util.Iterator;
+import java.util.Set;
+import java.util.Map;
 /**
  * Create the main GUI of our application
  * **/
@@ -21,7 +23,8 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	/**
 	 * Map declarations
 	 * **/
-	public static HashMap<String,MapStop> stopMap = new HashMap<String,MapStop>(70);
+	public static HashMap<String,Point> stopMap = new HashMap<String,Point>(70);
+	public static HashMap<String,Point> trainMap = new HashMap<String,Point>(70);
 	public static final String IMAGE_PATH = "mbta.bmp";
 	public static Image map;
 	public static JLabel imageLabel;
@@ -31,7 +34,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	static AffineTransform trans;
 
 	public static final int MAX_TIME = 1000;
-	public static final int MIN_TIME = 60;
+	public static final int MIN_TIME = 30;
 
 	public static LinkedList<TrainLine> trainLines = new LinkedList<TrainLine>();
 	private static LinkedList<Stop> stops;
@@ -241,7 +244,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		c.fill = GridBagConstraints.BOTH;
 		//Display the window
 		//divide the window into 3 columns
-		frame.setLayout(new GridLayout(1,3,5,0));
+		frame.setLayout(new GridLayout(1,3));
 		//set window as visible
 		frame.setVisible(true); 
 
@@ -405,7 +408,10 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		lastRight.add(arrFrame);
 		arrFrame.add(pickArr);
 
-		//add internal jframes in order to fill the grid layout
+
+		left.setMinimumSize(new Dimension(300,40));		
+		middle.setMinimumSize(new Dimension(300,40));		
+		right.setMinimumSize(new Dimension(300,40));		
 		frame.add(left);
 		frame.add(middle);
 		frame.add(right);
@@ -476,8 +482,9 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	 **/
 	public static void update() {
 		Graphics2D g = (Graphics2D)map.getGraphics();
-		g.clearRect(0, 0, imageLabel.getWidth(), imageLabel.getHeight());
+		//g.clearRect(0, 0, imageLabel.getWidth(), imageLabel.getHeight());
 		createMap();
+		trainMap.clear();
 		/*
 		trans = new AffineTransform(g.getTransform());
 		trans.scale(scaleX, scaleY);
@@ -534,7 +541,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 					if(stopMap.containsKey(nextString.toUpperCase()) 
 							&& stopMap.containsKey(destString.toUpperCase())
 							&& !nextString.equals(destString)) {
-						drawTrain(nextString, destString, timeLeft);
+						drawTrain(nextString, destString, timeLeft, train.getTrainID());
 					}
 				}
 				else {
@@ -629,7 +636,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	 * Draws a train
 	 * @author NF and refactored by AG
 	 * **/
-	public static void drawTrain(String nextStop, String dest, int timeLeft) {
+	public static void drawTrain(String nextStop, String dest, int timeLeft, String id) {
 		Graphics2D g = (Graphics2D)map.getGraphics();
 
 		int x = 0;
@@ -637,15 +644,22 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		int lastX = 0;
 		int lastY = 0;
 		//int z = stopMap.get(getLastStop(getStopByName(position),getStopByName(destination))).x;
+		
 		Stop next = TripPlanner.getStopByName(nextStop);
 		Stop destination = TripPlanner.getStopByName(dest);
 		String lastStop = getLastStop(next,destination);
+		Stop last =  TripPlanner.getStopByName(lastStop);
 		//System.out.println(a + " " + b + " " + lastStop);
 
 		// Next stop position
 		int nextX = stopMap.get(nextStop.toUpperCase()).x;
 		int nextY = stopMap.get(nextStop.toUpperCase()).y;
-
+		
+		//if(TripPlanner.getStopNameByID(next.stopID).equals(TripPlanner.getStopNameByID(destination.stopID))){
+		if(nextStop.equals(dest)){
+			x = lastX;
+			y = lastY;
+		}
 		// Previous stop position
 		if(stopMap.containsKey(lastStop.toUpperCase())) {
 			lastX = stopMap.get(lastStop.toUpperCase()).x;		
@@ -655,25 +669,46 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 		// If the train will soon reach the next predicted stop
 		// or the previous stop is can't be determined
-		if(timeLeft < MIN_TIME || lastX == 0){
+		if(timeLeft < MIN_TIME || (lastX == 0 && lastY == 0)){
 			x = nextX;
 			y = nextY;
 		}
 		// If the train won't soon reach the next predicted stop
-		else if(timeLeft > MAX_TIME || nextX == 0){
+		else if(timeLeft > MAX_TIME || (nextX == 0 && nextY == 0)){
 			x = lastX;
 			y = lastY;
 		}
 		// Draw the train in between stops
 		else {
-			x = (int)(LinearInterpolate((float)lastX, (float)nextX, (float)timeLeft/MAX_TIME)*100)/100;
-			y = (int)(LinearInterpolate((float)lastY, (float)nextY, (float)timeLeft/MAX_TIME)*100)/100;
+			float lerpTime = (float)timeLeft/MAX_TIME;
+			//System.out.println(lerpTime);
+			//if(lerpTime >= 1.0f){ lerpTime = 1.0f;} 
+			//else if(lerpTime <= 0.0f){ lerpTime = 0.0f;}
+			x = (int)(LinearInterpolate((float)lastX, (float)nextX, lerpTime)*100)/100; //(float)timeLeft/MAX_TIME
+			y = (int)(LinearInterpolate((float)lastY, (float)nextY, lerpTime)*100)/100; //(float)timeLeft/MAX_TIME			
+			//System.out.println((int)(LinearInterpolate(0f, (float)nextX, lerpTime)*100)/100);			
+			
 			//x = (nextX+lastX)/2;
 			//y = (nextY+lastY)/2;
 		}
 
-		g.setColor(TRAIN_COLOR);
-		g.fillOval(x-9, y-9, 18, 18);
+		if(last.stopID < next.stopID){
+			g.setColor(Color.black);
+			g.fillOval(x-18, y-9, 15, 15);
+			g.setColor(new Color(220,50,220));
+			g.fillOval(x-15, y-6, 9, 9);
+			
+		}
+		if(last.stopID > next.stopID){
+			g.setColor(Color.black);
+			g.fillOval(x-3, y-9, 15, 15);
+			g.setColor(new Color(0,220,50));
+			g.fillOval(x, y-6, 9, 9);
+		}
+		
+		trainMap.put(id,new Point(x,y));
+		
+		
 		g.dispose();
 		imageLabel.repaint();
 	}
@@ -730,57 +765,57 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	}
 
 	public static void pushHash(){
-		stopMap.put("OAK GROVE",new MapStop(799,77));
-		stopMap.put("MALDEN",new MapStop(798,143));
-		stopMap.put("WELLINGTON",new MapStop(799,214));
-		stopMap.put("SULLIVAN",new MapStop(799,298));
-		stopMap.put("COMMUNITY COLLEGE",new MapStop(801,377));
-		stopMap.put("NORTH STATION",new MapStop(813,471));
-		stopMap.put("CHINATOWN",new MapStop(724,837));
-		stopMap.put("TUFTS MEDICAL CENTER",new MapStop(684,872));
-		stopMap.put("BACK BAY",new MapStop(652,907));
-		stopMap.put("MASS AVE",new MapStop(616,944));
-		stopMap.put("RUGGLES",new MapStop(579,979));
-		stopMap.put("ROXBURY CROSSING",new MapStop(544,1011));
-		stopMap.put("JACKSON SQUARE",new MapStop(506,1049));
-		stopMap.put("STONY BROOK",new MapStop(472,1085));
-		stopMap.put("GREEN STREET",new MapStop(433,1123));
-		stopMap.put("FOREST HILLS",new MapStop(400,1158));
-		stopMap.put("DOWNTOWN CROSSING",new MapStop(798,761));
-		stopMap.put("STATE",new MapStop(870,681));
-		stopMap.put("HAYMARKET",new MapStop(867,561));
-		stopMap.put("ALEWIFE",new MapStop(165,321));
-		stopMap.put("DAVIS",new MapStop(253,321));
-		stopMap.put("PORTER",new MapStop(374,343));
-		stopMap.put("HARVARD",new MapStop(453,417));
-		stopMap.put("CENTRAL SQUARE",new MapStop(521,487));
-		stopMap.put("KENDALL/MIT",new MapStop(600,565));
-		stopMap.put("CHARLES/MGH",new MapStop(672,638));
-		stopMap.put("PARK ST",new MapStop(728,691));
-		stopMap.put("SOUTH STATION",new MapStop(882,846));
-		stopMap.put("BROADWAY",new MapStop(901,942));
-		stopMap.put("ANDREW",new MapStop(899,1021));
-		stopMap.put("JFK/UMASS",new MapStop(901,1104));
-		stopMap.put("NORTH QUINCY",new MapStop(1075,1422));
-		stopMap.put("WOLLASTON",new MapStop(1147,1496));
-		stopMap.put("QUINCY CENTER",new MapStop(1222,1569));
-		stopMap.put("QUINCY ADAMS",new MapStop(1292,1639));
-		stopMap.put("BRAINTREE",new MapStop(1314,1794));
-		stopMap.put("BOWDOIN",new MapStop(746,565));
-		stopMap.put("GOVERNMENT CENTER",new MapStop(798,619));
-		stopMap.put("AQUARIUM",new MapStop(936,621));
-		stopMap.put("MAVERICK",new MapStop(1052,505));
-		stopMap.put("AIRPORT",new MapStop(1111,448));
-		stopMap.put("WOOD ISLAND",new MapStop(1161,399));
-		stopMap.put("ORIENT HEIGHTS",new MapStop(1214,345));
-		stopMap.put("SUFFOLK DOWNS",new MapStop(1267,292));
-		stopMap.put("BEACHMONT",new MapStop(1320,238));
-		stopMap.put("REVERE BEACH",new MapStop(1371,186));
-		stopMap.put("WONDERLAND",new MapStop(1435,124));
-		stopMap.put("SAVIN HILL",new MapStop(847,1159));
-		stopMap.put("FIELDS CORNER",new MapStop(797,1230));
-		stopMap.put("SHAWMUT",new MapStop(799,1282));
-		stopMap.put("ASHMONT",new MapStop(799,1342));
+		stopMap.put("OAK GROVE",new Point(799,77));
+		stopMap.put("MALDEN",new Point(798,143));
+		stopMap.put("WELLINGTON",new Point(799,214));
+		stopMap.put("SULLIVAN",new Point(799,298));
+		stopMap.put("COMMUNITY COLLEGE",new Point(801,377));
+		stopMap.put("NORTH STATION",new Point(813,471));
+		stopMap.put("CHINATOWN",new Point(724,837));
+		stopMap.put("TUFTS MEDICAL CENTER",new Point(684,872));
+		stopMap.put("BACK BAY",new Point(652,907));
+		stopMap.put("MASS AVE",new Point(616,944));
+		stopMap.put("RUGGLES",new Point(579,979));
+		stopMap.put("ROXBURY CROSSING",new Point(544,1011));
+		stopMap.put("JACKSON SQUARE",new Point(506,1049));
+		stopMap.put("STONY BROOK",new Point(472,1085));
+		stopMap.put("GREEN STREET",new Point(433,1123));
+		stopMap.put("FOREST HILLS",new Point(400,1158));
+		stopMap.put("DOWNTOWN CROSSING",new Point(798,761));
+		stopMap.put("STATE",new Point(870,681));
+		stopMap.put("HAYMARKET",new Point(867,561));
+		stopMap.put("ALEWIFE",new Point(165,321));
+		stopMap.put("DAVIS",new Point(253,321));
+		stopMap.put("PORTER",new Point(374,343));
+		stopMap.put("HARVARD",new Point(453,417));
+		stopMap.put("CENTRAL SQUARE",new Point(521,487));
+		stopMap.put("KENDALL/MIT",new Point(600,565));
+		stopMap.put("CHARLES/MGH",new Point(672,638));
+		stopMap.put("PARK ST",new Point(728,691));
+		stopMap.put("SOUTH STATION",new Point(882,846));
+		stopMap.put("BROADWAY",new Point(901,942));
+		stopMap.put("ANDREW",new Point(899,1021));
+		stopMap.put("JFK/UMASS",new Point(901,1104));
+		stopMap.put("NORTH QUINCY",new Point(1075,1422));
+		stopMap.put("WOLLASTON",new Point(1147,1496));
+		stopMap.put("QUINCY CENTER",new Point(1222,1569));
+		stopMap.put("QUINCY ADAMS",new Point(1292,1639));
+		stopMap.put("BRAINTREE",new Point(1314,1794));
+		stopMap.put("BOWDOIN",new Point(746,565));
+		stopMap.put("GOVERNMENT CENTER",new Point(798,619));
+		stopMap.put("AQUARIUM",new Point(936,621));
+		stopMap.put("MAVERICK",new Point(1052,505));
+		stopMap.put("AIRPORT",new Point(1111,448));
+		stopMap.put("WOOD ISLAND",new Point(1161,399));
+		stopMap.put("ORIENT HEIGHTS",new Point(1214,345));
+		stopMap.put("SUFFOLK DOWNS",new Point(1267,292));
+		stopMap.put("BEACHMONT",new Point(1320,238));
+		stopMap.put("REVERE BEACH",new Point(1371,186));
+		stopMap.put("WONDERLAND",new Point(1435,124));
+		stopMap.put("SAVIN HILL",new Point(847,1159));
+		stopMap.put("FIELDS CORNER",new Point(797,1230));
+		stopMap.put("SHAWMUT",new Point(799,1282));
+		stopMap.put("ASHMONT",new Point(799,1342));
 	}
 
 	//returns an array of strings from min to max
@@ -796,11 +831,11 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	public static void drawPath(LinkedList<Stop> path, Color color) {
 		Graphics2D g = (Graphics2D)map.getGraphics();
 		for (int s = 0; s < path.size()-1; s++) {
-			MapStop startPos = stopMap.get(path.get(s).stop_name.toUpperCase());
+			Point startPos = stopMap.get(path.get(s).stop_name.toUpperCase());
 			int startX = startPos.x;
 			int startY = startPos.y;
 
-			MapStop endPos = stopMap.get(path.get(s+1).stop_name.toUpperCase());
+			Point endPos = stopMap.get(path.get(s+1).stop_name.toUpperCase());
 			int endX = endPos.x;
 			int endY = endPos.y;
 
@@ -816,9 +851,48 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	 * **/
 	@Override
 	public void mouseMoved(MouseEvent e) {
+		Graphics2D g = (Graphics2D)map.getGraphics();
+	    int x = e.getX();
+	    int y = e.getY();
+	    
+	    for(String s : trainMap.keySet()){
+	    Point posn = trainMap.get(s);
+	    
+	    if((x<posn.x+15) && (x>posn.x-15) && (y<posn.y+15) && (y>posn.y-15)){
+	    	//update();
+	    	//System.out.println("asf");
+	    	g.setColor(Color.LIGHT_GRAY);
+	    	g.fillRect(posn.x+20, posn.y-20, 100, 20);
+	    	g.setColor(Color.black);
+	    	g.drawBytes(s.getBytes(),0,s.getBytes().length,posn.x+30,posn.y-5);
+	    	g.dispose();	    	
+	    	imageLabel.repaint();
+	    	
+	    }
+
+	    }
+	    
+	    for(String s : stopMap.keySet()){
+		    Point posn = stopMap.get(s);
+		    
+		    if((x<posn.x+15) && (x>posn.x-15) && (y<posn.y+15) && (y>posn.y-15)){
+		    	//update();
+		    	//System.out.println("asf");
+		    	g.setColor(Color.LIGHT_GRAY);
+		    	g.fillRect(posn.x+20, posn.y-20, 100, 20);
+		    	g.setColor(Color.black);
+		    	g.drawBytes(s.getBytes(),0,s.getBytes().length,posn.x+30,posn.y-5);
+		    	g.dispose();	    	
+		    	imageLabel.repaint();
+		    	
+		    }
+
+		    }
+	    
 	}
 	@Override
-	public void mouseEntered(MouseEvent arg0) {
+	public void mouseEntered(MouseEvent e) {
+
 	}
 	@Override
 	public void mouseExited(MouseEvent arg0) {
