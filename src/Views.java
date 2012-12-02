@@ -6,12 +6,12 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.geom.AffineTransform;
 import java.util.HashMap;
 import java.util.LinkedList;
 import javax.imageio.ImageIO;
 import javax.swing.event.*;
 import javax.swing.table.*;
-import java.awt.image.BufferedImage;
 
 /**
  * Create the main GUI of our application
@@ -23,35 +23,72 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	 * **/
 	public static HashMap<String,MapStop> stopMap = new HashMap<String,MapStop>(70);
 	public static final String IMAGE_PATH = "mbta.bmp";
-	public static BufferedImage map;
+	public static Image map;
 	public static JLabel imageLabel;
 	static JInternalFrame middleLeft;
+	static double scaleX = 1.0;
+	static double scaleY = 1.0;
+	static AffineTransform trans;
 
 	public static final int MAX_TIME = 1000;
-	public static final int MIN_TIME = 60; 
+	public static final int MIN_TIME = 60;
 
 	public static LinkedList<TrainLine> trainLines = new LinkedList<TrainLine>();
 	private static LinkedList<Stop> stops;
+	private static LinkedList<String> selectedStops = new LinkedList<String>();
 
 	/**
 	 * Table declarations
 	 * **/
 	public static JTable table;
 	public static DefaultTableModel tableModel;
+	public static JTable stopsTable;
+	public static DefaultTableModel stopsTableModel;
+	// Table data
+	static Object[][] data;
+	// Stops table data
+	static Object[][] stopsData;
 	// Column names for the list of trains
-	public static String[] trainColumns = {"ID", "Line", "Location", "Destination"};
+	private static String[] trainColumns = {"ID", "Line", "Location", "Destination"};
 	// Column names for the list of stops
-	public static String[] stopColumns = {"Line", "Name", "Stop ID"};
-	public static boolean showTrains = true;
-	public enum viewState {
+	private static String[] stopColumns = {"Line", "Name", "Stop ID"};
+	//
+	private static String[] stopsTableColumns = {"Selected Stops"};
+	private static boolean showTrains = true;
+	private enum viewState {
 		VIEWING_TRAINS,
 		VIEWING_STOPS,
 		VIEWING_ROUTE
 	}
+	
+	JComboBox<String> stopInfo;
+	JComboBox<String> selectStop;
 
 	int draggedAtX, draggedAtY;
 
-	// Views constructor
+	/**
+	 * Colors
+	 * **/
+	// Foreground color
+	static Color FORE_COLOR = new Color(230,230,230);
+	// Background color
+	static Color BACK_COLOR = new Color(100,100,100);
+	// Train colors
+	static Color TRAIN_COLOR = Color.green;
+
+	/**
+	 * Sizes
+	 * **/
+	// Max window size
+	Dimension MAX_SIZE = new Dimension(1920, 1080);
+	// Min window size
+	Dimension MIN_SIZE = new Dimension(1200, 800);
+
+	/**
+	 * Constructor for the Views class
+	 * @param lines
+	 * @param s
+	 * **/
 	public Views(LinkedList<TrainLine> lines, LinkedList<Stop> s) {
 		stops = s;
 		trainLines = lines;
@@ -60,48 +97,52 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		update();
 	}
 
-	// Sets the lines
+	/**
+	 * Sets the lines
+	 * @param lines
+	 */
 	public void setLines(LinkedList<TrainLine> lines) {
 		//trainLines.clear();
 		// Set the trainLines to the given list of lines
-		trainLines = lines;
+		trainLines = lines;//.addAll(lines);
 		// Update table and map
 		update();
 	}
 
-	//creates the Window
-	//NF
+	/**
+	 * Creates and sets up the window
+	 * @author NF
+	 */
 	public void createWindow() {
-		//Create and set up the window.
-		JFrame frame = new JFrame("MBTA Trip Planner"); 
-		frame.setExtendedState(Frame.MAXIMIZED_BOTH);
-		frame.setBackground(new Color(100,100,100));
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
+		JFrame frame = new JFrame("MBTA Trip Planner");
+		frame.setBackground(BACK_COLOR);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setMinimumSize(MIN_SIZE);
+		frame.setMaximumSize(MAX_SIZE);
+		frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 
-		//define all labels
+		/**
+		 * The Labels
+		 * **/
 		imageLabel = new JLabel();
 		imageLabel.addMouseListener(this);
 		imageLabel.addMouseMotionListener(this);
 		JLabel depTime = new JLabel("Departure Time");
 		JLabel arrTime = new JLabel("Arrival Time");
 
-		SpinnerListModel hours1 = new SpinnerListModel(getTime(1,13));
-		SpinnerListModel mins1 = new SpinnerListModel(getTime(1,60));
-		SpinnerListModel hours2 = new SpinnerListModel(getTime(1,13));
-		SpinnerListModel mins2 = new SpinnerListModel(getTime(1,60));
-		JSpinner pickArrHour = new JSpinner(hours1);
-		JSpinner pickDepHour = new JSpinner(hours2);
-		JSpinner pickArrMin = new JSpinner(mins1);
-		JSpinner pickDepMin = new JSpinner(mins2);
-
+		JSpinner pickArr = new JSpinner(new SpinnerDateModel());
+		JSpinner.DateEditor arrEditor = new JSpinner.DateEditor(pickArr, "HH:mm");
+		pickArr.setEditor(arrEditor);
+		JSpinner pickDep = new JSpinner(new SpinnerDateModel());
+		JSpinner.DateEditor depEditor = new JSpinner.DateEditor(pickDep, "HH:mm");
+		pickDep.setEditor(depEditor);
 
 		/**
 		 * The Buttons
-		 * NF and AG
 		 * **/
 		// List Trains button
 		JButton listTrains = new JButton("List Trains");
-		listTrains.setBackground(new Color(230,230,230));
+		listTrains.setBackground(FORE_COLOR);
 		listTrains.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				showTrains = true;
@@ -111,7 +152,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 		// List Stops button
 		JButton listStops = new JButton("List Stops");
-		listStops.setBackground(new Color(230,230,230));
+		listStops.setBackground(FORE_COLOR);
 		listStops.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				showTrains = false;
@@ -121,7 +162,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 		// Test System button
 		final JButton testSystem = new JButton("Use Test Data");
-		testSystem.setBackground(new Color(230,230,230));
+		testSystem.setBackground(FORE_COLOR);
 		testSystem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				TripPlanner.toggleLiveData();
@@ -134,65 +175,67 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 		// Add Stop button
 		JButton addStop = new JButton("Add Stop");
-		addStop.setBackground(new Color(230,230,230));
+		addStop.setBackground(FORE_COLOR);
+		addStop.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				selectedStops.add((String) selectStop.getSelectedItem());
+				updateStopsTable();
+			}
+		});
 
 		// Calculate Route button
 		JButton calcRoute = new JButton("Calculate Route");
-		calcRoute.setBackground(new Color(230,230,230));
+		calcRoute.setBackground(FORE_COLOR);
 
-
-
-		String[] stops = {"stop a", "stop b", "stop c", "stop d", "stop e", "stop f"};
-
-		JComboBox stopInfo = new JComboBox();
-		JComboBox selectStop = new JComboBox();
-		for(int i=0;i<stops.length;i++){
-			stopInfo.addItem(stops[i]);
-			selectStop.addItem(stops[i]);
+		/**
+		 * Combo boxes
+		 * **/
+		// Populate list of stops for GUI
+		String[] stopList = new String[stops.size()];
+		for (int s = 0; s < stops.size(); s++) {
+			stopList[s] = stops.get(s).stop_name;
 		}
 
-		JRadioButton earliestDep = new JRadioButton("Earliest Departures");
-		earliestDep.setBackground(new Color(230,230,230));
+		// Populate combo boxes
+		stopInfo = new JComboBox<String>();
+		selectStop = new JComboBox<String>();
+		for(int i = 0; i < stopList.length; i++){
+			stopInfo.addItem(stopList[i]);
+			selectStop.addItem(stopList[i]);
+		}
+
+		/**
+		 * Radio buttons
+		 **/
+		// Earliest departure radio button
+		JRadioButton earliestDep = new JRadioButton("Earliest Departure");
+		earliestDep.setBackground(FORE_COLOR);
 		//birdButton.setSelected(true);
 
+		// Fewest transfers radio button
 		JRadioButton fewestTrans = new JRadioButton("Fewest Transfers");
 		fewestTrans.setBackground(new Color(220,220,220));
 		//catButton.setActionCommand(catString);
 
+		// Earliest arrival radio button
 		JRadioButton earliestArr = new JRadioButton("Earliest Arrival");
 		earliestArr.setBackground(new Color(210,210,210));
 		//dogButton.setActionCommand(dogString);
 
+		// Button group for advanced options
 		ButtonGroup group = new ButtonGroup();
 		group.add(earliestDep);
 		group.add(fewestTrans);
 		group.add(earliestArr);
 
-		JRadioButton am1 = new JRadioButton("PM");
-		fewestTrans.setBackground(new Color(220,220,220));
-
-		JRadioButton pm1 = new JRadioButton("AM");
-		earliestArr.setBackground(new Color(210,210,210));
-
-		JRadioButton am2 = new JRadioButton("PM");
-		fewestTrans.setBackground(new Color(220,220,220));
-
-		JRadioButton pm2 = new JRadioButton("AM");
-		earliestArr.setBackground(new Color(210,210,210));
-
-		ButtonGroup ampm1 = new ButtonGroup();
-		ampm1.add(am1);
-		ampm1.add(pm1);
-
-		ButtonGroup ampm2 = new ButtonGroup();
-		ampm2.add(am2);
-		ampm2.add(pm2);
-
-
+		/**
+		 * Checkboxes
+		 **/
 		//define all checkboxes
 		JCheckBox orderedList = new JCheckBox("Ordered List");
-		orderedList.setBackground(new Color(230,230,230));
+		orderedList.setBackground(FORE_COLOR);
 
+		// Create GridBagLayout
 		GridBagLayout gridbag = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
 		c.fill = GridBagConstraints.BOTH;
@@ -215,7 +258,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 		//////////////////////////////////////
 		//set up layout for rightmost jframe
-		JInternalFrame right1 = newFrame(2,new Color(230,230,230));
+		JInternalFrame right1 = newFrame(2,FORE_COLOR);
 		right1.setMinimumSize(new Dimension(300,40));
 		right1.setLayout(new FlowLayout());
 		c.gridwidth = GridBagConstraints.REMAINDER; //end row
@@ -275,15 +318,11 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		depFrame.setLayout(new GridLayout(1,2,5,5));
 		JInternalFrame arrFrame = newFrame(0,new Color(220,220,220));
 		arrFrame.setLayout(new GridLayout(1,2,5,5));
-		JInternalFrame ampmFrame1 = newFrame(0,new Color(220,220,220));
-		ampmFrame1.setLayout(new GridLayout(1,2,5,5));
-		JInternalFrame ampmFrame2 = newFrame(0,new Color(220,220,220));
-		ampmFrame2.setLayout(new GridLayout(1,2,5,5));
 		///////////////////////////////////////
 
 		//////////////////////////////////////
 		//set up layout for LEFT jframe
-		JInternalFrame topLeft = newFrame(2,new Color(230,230,230));
+		JInternalFrame topLeft = newFrame(2,FORE_COLOR);
 		topLeft.setLayout(new FlowLayout());
 		topLeft.setMinimumSize(new Dimension(300,40));
 		c.gridwidth = GridBagConstraints.REMAINDER; //end row
@@ -303,7 +342,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		gridbag.setConstraints(middleLeft, c);
 		left.add(middleLeft);
 
-		JInternalFrame bottomLeft = newFrame(2,new Color(230,230,230));
+		JInternalFrame bottomLeft = newFrame(2,FORE_COLOR);
 		bottomLeft.setLayout(new FlowLayout());
 		bottomLeft.setMinimumSize(new Dimension(300,40));
 		c.gridwidth = GridBagConstraints.REMAINDER; //end row
@@ -315,7 +354,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 		//////////////////////////////////////
 		//set up layout for LEFT jframe
-		JInternalFrame topMiddle = newFrame(2,new Color(230,230,230));
+		JInternalFrame topMiddle = newFrame(2,FORE_COLOR);
 		//topMiddle.setLayout(new GridLayout(1,3,5,5));
 		topMiddle.setLayout(new FlowLayout());
 		topMiddle.setMinimumSize(new Dimension(300,40));
@@ -347,9 +386,9 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		middleLeft.add(imageLabel);
 		//bottomLeft.add(drawTrains);
 
-		//add to middle jframe		 
+		//add to middle jframe
 		createTable(bottomMiddle);
-		stopsTable(right3);
+		createStopsTable(right3);
 		right1.add(orderedList);
 
 		right2.add(addStop);
@@ -361,18 +400,10 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 		lastLeft.add(depTime);
 		lastLeft.add(depFrame);
-		depFrame.add(pickDepHour);
-		depFrame.add(pickDepMin);
-		lastLeft.add(ampmFrame1);
-		ampmFrame1.add(am1);
-		ampmFrame1.add(pm1);
+		depFrame.add(pickDep);
 		lastRight.add(arrTime);
 		lastRight.add(arrFrame);
-		arrFrame.add(pickArrHour);
-		arrFrame.add(pickArrMin);
-		lastRight.add(ampmFrame2);
-		ampmFrame2.add(am2);
-		ampmFrame2.add(pm2);
+		arrFrame.add(pickArr);
 
 		//add internal jframes in order to fill the grid layout
 		frame.add(left);
@@ -381,7 +412,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 		//pack the frames neatly		
 		frame.pack();
-		frame.setSize(1920,1080);
+		//frame.setSize(1920,1080);
 	}
 
 	/**
@@ -419,18 +450,17 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		return frame;
 	}
 	private static JInternalFrame newFrame(){
-		return newFrame(2,new Color(230,230,230));
+		return newFrame(2,FORE_COLOR);
 	}
+
 	//takes an internal jframe and create a table in it
 	private void createTable(JInternalFrame container){
-
 		tableModel = new DefaultTableModel();
 		tableModel.addTableModelListener(this);
 		table = new JTable(tableModel);
 		table.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY, 1));
 		table.setShowVerticalLines(true);
 		table.setSize(700,700);
-		update();
 		JScrollPane scrollPane = new JScrollPane(table); 
 		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 		//table.setFillsViewportHeight(true);
@@ -445,10 +475,13 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	 * @author AG, CM and NF
 	 **/
 	public static void update() {
-		// Table data
-		Object[][] data;
-
 		Graphics2D g = (Graphics2D)map.getGraphics();
+		g.clearRect(0, 0, imageLabel.getWidth(), imageLabel.getHeight());
+		createMap();
+		/*
+		trans = new AffineTransform(g.getTransform());
+		trans.scale(scaleX, scaleY);
+		g.setTransform(trans);*/
 
 		// If the trains should be shown
 		if (showTrains) {
@@ -523,7 +556,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		if (tableModel != null) {
 			tableModel.setDataVector(data, (showTrains ? trainColumns : stopColumns));
 		}
-		
+
 		// Dispose of graphics object
 		g.dispose();
 		// Repaint the imageLabel
@@ -536,13 +569,13 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		String tempString = dest.stop_name;
 		if(!curStop.StartOfLine || !curStop.EndOfLine){
 			if(curStop.stopID < dest.stopID){
-				String temp2 =  TripPlanner.getStopName(curStop.stopID - 2);
+				String temp2 =  TripPlanner.getStopNameByID(curStop.stopID - 2);
 				if(stops.contains(TripPlanner.getStopByName(tempString))){
 					tempString = temp2;
 				}
 			}
 			if(curStop.stopID > dest.stopID){
-				String temp2 = TripPlanner.getStopName(curStop.stopID + 2);
+				String temp2 = TripPlanner.getStopNameByID(curStop.stopID + 2);
 				if(stops.contains(TripPlanner.getStopByName(tempString))){
 					tempString = temp2;
 				}
@@ -559,109 +592,124 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		return(y1*(1-mu)+y2*mu);
 	}
 
-
 	//makes the stops table (to be refactored)
 	//NF
-	private static void stopsTable(JInternalFrame container){
-		String[] columnNames = {"Stops"};
-
-		String[][] data = {{"State Street"}, {"Gov't Center"}, {"Park Street"}, {"Harvard Ave"},
-				{"State Street"}, {"Gov't Center"}, {"Park Street"}, {"Harvard Ave"},
-				{"State Street"}, {"Gov't Center"}, {"Park Street"}, {"Harvard Ave"},
-				{"State Street"}, {"Gov't Center"}, {"Park Street"}, {"Harvard Ave"}};
-		JTable table = new JTable(data, columnNames);	
-		table.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY, 1));
-		table.setShowVerticalLines(true);
-		table.setSize(700,700);
-		JScrollPane scrollPane = new JScrollPane(table); 
+	private void createStopsTable(JInternalFrame container) {
+		stopsTableModel = new DefaultTableModel();
+		stopsTableModel.addTableModelListener(this);
+		stopsTable = new JTable(stopsTableModel);
+		stopsTable.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY, 1));
+		stopsTable.setShowVerticalLines(true);
+		JScrollPane scrollPane = new JScrollPane(stopsTable); 
 		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 		//table.setFillsViewportHeight(true);
-
-		container.add(table.getTableHeader(), BorderLayout.PAGE_START);
-		container.add(scrollPane);
-		//container.add(table);
-	}
-
-	//scales the map on mouse click; scales in for left click, scales out for right click
-	//NF + AG
-	public void mouseClicked(MouseEvent e) {
-		int button = e.getButton();		
-		if (button == MouseEvent.BUTTON1) {
-
-			String name = JOptionPane.showInputDialog(null,
-					"What is your name?",
-					"Enter your name",
-					JOptionPane.QUESTION_MESSAGE);
-			//MapStop stop1 = new MapStop(e.getX(),e.getY());
-			//stopMap.put(name, stop1);
-			//drawNode(stopMap.get("Downtown Crossing").x,stopMap.get("Downtown Crossing").y,g);
-			System.out.println("stopMap.put('"+name+"',new MapStop("+e.getX()+","+e.getY()+"));");
-			
-			/*
-			System.out.println("button 1");
-			scaleX *= 1.5;
-			scaleY *= 1.5;
-			createMap(scaleX, scaleY, SCALE_TYPE);
-			 */
-		}
-
-		/*
-		else if (button == MouseEvent.BUTTON3) {
-			System.out.println("button 3");
-			scaleX /= 1.5;
-			scaleY /= 1.5;
-			createMap(scaleX, scaleY, SCALE_TYPE);
-		}
-		 */
-
-	}
-
-	//draws trains
-	//NF
-	public static void drawTrain(String pos, String dest, int timeLeft) {
-		Graphics2D g = (Graphics2D)map.getGraphics();
 		
+		updateStopsTable();
+
+		container.add(stopsTable.getTableHeader(), BorderLayout.PAGE_START);
+		container.add(scrollPane);
+	}
+	
+	// Update stops table data
+	private static void updateStopsTable() {
+		stopsData = new Object[selectedStops.size()][];
+		
+		for (int s = 0; s < selectedStops.size(); s++) {
+			// Create row to hold selected stop info
+			Object[] row = { selectedStops.get(s) };
+			
+			stopsData[s] = row;
+		}
+		
+		if (stopsTableModel != null)
+			stopsTableModel.setDataVector(stopsData, stopsTableColumns);
+	}
+
+	/**
+	 * Draws a train
+	 * @author NF and refactored by AG
+	 * **/
+	public static void drawTrain(String nextStop, String dest, int timeLeft) {
+		Graphics2D g = (Graphics2D)map.getGraphics();
+
 		int x = 0;
 		int y = 0;	
-		int x1 = 0;
-		int y1 = 0;
+		int lastX = 0;
+		int lastY = 0;
 		//int z = stopMap.get(getLastStop(getStopByName(position),getStopByName(destination))).x;
-		Stop position = TripPlanner.getStopByName(pos);
+		Stop next = TripPlanner.getStopByName(nextStop);
 		Stop destination = TripPlanner.getStopByName(dest);
-		String a = TripPlanner.getStopName(position.stopID);
-		String b = TripPlanner.getStopName(destination.stopID);
-		String lastStop = getLastStop(position,destination);
+		String lastStop = getLastStop(next,destination);
 		//System.out.println(a + " " + b + " " + lastStop);
 
-		int x0 = stopMap.get(pos.toUpperCase()).x;
-		int y0 = stopMap.get(pos.toUpperCase()).y;
+		// Next stop position
+		int nextX = stopMap.get(nextStop.toUpperCase()).x;
+		int nextY = stopMap.get(nextStop.toUpperCase()).y;
 
+		// Previous stop position
 		if(stopMap.containsKey(lastStop.toUpperCase())) {
-			x1 = stopMap.get(lastStop.toUpperCase()).x;		
-			y1 = stopMap.get(lastStop.toUpperCase()).y;
+			lastX = stopMap.get(lastStop.toUpperCase()).x;		
+			lastY = stopMap.get(lastStop.toUpperCase()).y;
 		}
 		//System.out.println(lastStop.toUpperCase());
 
-
-		if(timeLeft < MIN_TIME){
-			x = x0;
-			y = y0;
+		// If the train will soon reach the next predicted stop
+		// or the previous stop is can't be determined
+		if(timeLeft < MIN_TIME || lastX == 0){
+			x = nextX;
+			y = nextY;
 		}
-		else if(timeLeft > MAX_TIME){
-			x = x1;
-			y = y1;
+		// If the train won't soon reach the next predicted stop
+		else if(timeLeft > MAX_TIME || nextX == 0){
+			x = lastX;
+			y = lastY;
 		}
-		else{
-			x = (x0+x1)/2;
-			y = (y0+y1)/2;
+		// Draw the train in between stops
+		else {
+			x = (int)(LinearInterpolate((float)lastX, (float)nextX, (float)timeLeft/MAX_TIME)*100)/100;
+			y = (int)(LinearInterpolate((float)lastY, (float)nextY, (float)timeLeft/MAX_TIME)*100)/100;
+			//x = (nextX+lastX)/2;
+			//y = (nextY+lastY)/2;
 		}
 
-		//System.out.println(x);
-		//System.out.println(y);
-
-		g.setColor(Color.red);
+		g.setColor(TRAIN_COLOR);
 		g.fillOval(x-9, y-9, 18, 18);
-		//g.fillOval(stopMap.get("HAYMARKET").x - 9, stopMap.get("HAYMARKET").y-9, 18, 18);
+		g.dispose();
+		imageLabel.repaint();
+	}
+
+	// scales the map on mouse click; scales in for left click, scales out for right click
+	// NF + AG
+	public void mouseClicked(MouseEvent e) {
+		int button = e.getButton();		
+		if (button == MouseEvent.BUTTON1) {
+			//Graphics2D g = (Graphics2D)map.getGraphics();
+
+			/*
+				String name = JOptionPane.showInputDialog(null,
+						"What is your name?",
+						"Enter your name",
+						JOptionPane.QUESTION_MESSAGE);
+				//MapStop stop1 = new MapStop(e.getX(),e.getY());
+				//stopMap.put(name, stop1);
+				//drawNode(stopMap.get("Downtown Crossing").x,stopMap.get("Downtown Crossing").y,g);
+				System.out.println("stopMap.put('"+name+"',new MapStop("+e.getX()+","+e.getY()+"));");
+			 */
+
+
+			System.out.println("button 1");
+			scaleX *= 1.5;
+			scaleY *= 1.5;			
+		}
+
+		/*
+			else if (button == MouseEvent.BUTTON3) {
+				System.out.println("button 3");
+				scaleX /= 1.5;
+				scaleY /= 1.5;
+				createMap(scaleX, scaleY, SCALE_TYPE);
+			}
+		 */
 	}
 
 	//sets the location of the map using the mouse coordinates
@@ -671,18 +719,6 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 				e.getY() - draggedAtY + imageLabel.getY());		
 	}
 
-	@Override
-	public void mouseMoved(MouseEvent e) {
-	}
-
-	@Override
-	public void mouseEntered(MouseEvent arg0) {
-	}
-
-	@Override
-	public void mouseExited(MouseEvent arg0) {
-	}
-
 	//obtains the current mouse coordinates upon mousePress
 	//NF
 	public void mousePressed(MouseEvent e) {
@@ -690,8 +726,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		if (e.getSource() == imageLabel) {
 			draggedAtX = e.getX();
 			draggedAtY = e.getY();
-		} 
-
+		}
 	}
 
 	public static void pushHash(){
@@ -748,14 +783,6 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		stopMap.put("ASHMONT",new MapStop(799,1342));
 	}
 
-	@Override
-	public void mouseReleased(MouseEvent arg0) {
-	}
-
-	@Override
-	public void tableChanged(TableModelEvent e) {
-	}
-
 	//returns an array of strings from min to max
 	//NF
 	public String[] getTime(int min, int max){
@@ -782,5 +809,24 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			g.drawLine(startX, startY, endX, endY);
 			imageLabel.repaint();
 		}
+	}
+
+	/**
+	 * Unimplemented required methods
+	 * **/
+	@Override
+	public void mouseMoved(MouseEvent e) {
+	}
+	@Override
+	public void mouseEntered(MouseEvent arg0) {
+	}
+	@Override
+	public void mouseExited(MouseEvent arg0) {
+	}
+	@Override
+	public void mouseReleased(MouseEvent arg0) {
+	}
+	@Override
+	public void tableChanged(TableModelEvent e) {
 	}
 } 

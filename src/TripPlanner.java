@@ -145,7 +145,7 @@ public abstract class TripPlanner {
 		results = graph.multiSearch(goals);
 		LinkedList<Stop> path = new LinkedList<Stop>();
 		for (int r : results) {
-			String stopName = getStopName(r);
+			String stopName = getStopNameByID(r);
 			Stop s = getStopByName(stopName);
 			System.out.println(stopName);
 			path.add(s);
@@ -282,6 +282,7 @@ public abstract class TripPlanner {
 	// Return given object as a list
 	// AG
 	static List<?> getListFromObject(Object o) {
+		@SuppressWarnings("rawtypes")
 		List<?> temp = new LinkedList();
 		if (o instanceof List<?>)
 			temp = mapper.convertValue(o, List.class);
@@ -300,7 +301,6 @@ public abstract class TripPlanner {
 			while (jp.nextToken() == JsonToken.START_OBJECT) {
 				Stop stop = mapper.readValue(jp, Stop.class);
 				stops.add(stop);
-				//stop.printStop();
 				// after binding, stream points to closing END_OBJECT
 			}
 		}
@@ -315,7 +315,7 @@ public abstract class TripPlanner {
 	 * Returns the name of a stop
 	 * @author NF and AG
 	 * **/
-	public static String getStopName(int stopID) {
+	public static String getStopNameByID(int stopID) {
 		String stopName = "";
 		for (Stop s : stops) {
 			if (s.stopID == stopID)
@@ -323,9 +323,11 @@ public abstract class TripPlanner {
 		}
 		return stopName;
 	}
-
-	//gets stop by name (String)
-	//NF
+	
+	/**
+	 * Returns Stop given a Stop's name
+	 * @author NF
+	 * **/
 	public static Stop getStopByName(String name){
 		Stop tempStop = new Stop();
 		for(Stop s : stops){
