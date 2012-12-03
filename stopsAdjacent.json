@@ -183,7 +183,7 @@
 		"Line": "Blue",
 		"StationName": "GOVERNMENT CENTER",
 		"stopID": "70039",
-		"StartOfLine": "true",
+		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "Government Center",
 		"NextTo": ["70037", "70041"]
@@ -291,7 +291,7 @@
 		"Line": "Red",
 		"StationName": "DAVIS",
 		"stopID": "70063",
-		"StartOfLine": "true",
+		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "Davis",
 		"NextTo": ["70061", "70065"]
@@ -426,8 +426,8 @@
 		"Line": "Red",
 		"StationName": "ASHMONT",
 		"stopID": "70093",
-		"StartOfLine": "true",
-		"EndOfLine": "false",
+		"StartOfLine": "false",
+		"EndOfLine": "true",
 		"stop_name": "Ashmont",
 		"NextTo": ["70091"]
 	},

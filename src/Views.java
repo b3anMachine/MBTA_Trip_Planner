@@ -10,6 +10,7 @@ import java.awt.geom.AffineTransform;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Stack;
 
 import javax.imageio.ImageIO;
@@ -36,9 +37,13 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	public static final int MAX_TIME = 1300;
 	public static final int MIN_TIME = 15;
 
+	private static final int STOP_THRESHOLD = 15;
+	private static final int TRAIN_THRESHOLD = 10;
+
 	public static LinkedList<TrainLine> trainLines = new LinkedList<TrainLine>();
 	private static LinkedList<Stop> stops;
 	private static LinkedList<String> selectedStops = new LinkedList<String>();
+	private static LinkedList<Integer> pathList = new LinkedList<Integer>();
 
 	/**
 	 * Table declarations
@@ -52,18 +57,19 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	// Stops table data
 	static Object[][] stopsData;
 	// Column names for the list of trains
-	private static String[] trainColumns = {"ID", "Line", "Location", "Destination"};
+	private static String[] trainColumns = {"Line", "Next Stop", "Time To Next Stop", "Destination"};
 	// Column names for the list of stops
-	private static String[] stopColumns = {"Line", "Name", "Stop ID"};
+	private static String[] stopColumns = {"Line", "Name"};
 	//
 	private static String[] stopsTableColumns = {"Selected Stops"};
 	private static JButton removeStop;
 	private static boolean showTrains = true;
+	/*
 	private enum viewState {
 		VIEWING_TRAINS,
 		VIEWING_STOPS,
 		VIEWING_ROUTE
-	}
+	}*/
 
 	JComboBox<String> stopInfo;
 	JComboBox<String> selectStop;
@@ -80,7 +86,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	// Train color
 	static Color TRAIN_COLOR = Color.green;
 	// Path color
-	static Color PATH_COLOR = new Color(255, 255, 255, 100);
+	static Color PATH_COLOR = new Color(255, 255, 255, 200);
 
 	/**
 	 * Sizes
@@ -117,7 +123,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 	/**
 	 * Creates and sets up the window
-	 * @author NF
+	 * @author NF and AG
 	 */
 	public void createWindow() {
 		JFrame frame = new JFrame("MBTA Trip Planner");
@@ -125,16 +131,80 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setMinimumSize(MIN_SIZE);
 		frame.setMaximumSize(MAX_SIZE);
-		frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+		frame.setPreferredSize(MIN_SIZE);
+		//frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 
 		/**
 		 * The Labels
 		 * **/
-		imageLabel = new JLabel();
+		// The label that holds the map
+		imageLabel = new JLabel() {
+			// Custom tool tip handler
+			// AG
+			@Override
+			public String getToolTipText(MouseEvent event) {
+				int x = event.getX();
+				int y = event.getY();
+				String t = null;
+
+				// Create tool tip for a train
+				for(Train s : trainMap.keySet()){
+					Point posn = trainMap.get(s);
+					if((x < posn.x + TRAIN_THRESHOLD) && (x > posn.x - TRAIN_THRESHOLD)
+							&& (y < posn.y + TRAIN_THRESHOLD) && (y > posn.y - TRAIN_THRESHOLD)) {
+						LinkedList<Integer> goals = new LinkedList<Integer>();
+						for(Prediction p : s.getTrainPredictions()){
+							goals.add(TripPlanner.getStopByName(p.getName()).stopID);
+						}
+
+						//drawLineFromPoint(posn, stopMap.get(s.getTrainPredictions().get(0).getName()), Color.pink);
+						//drawTrainPath(goals);
+
+						t = "<html>Schedule:";
+						t += "<br>"+s.getTrainID();
+
+						boolean addMorePreds = true;
+						int numPreds = 0;
+						while (addMorePreds) {
+							List<Prediction> preds = s.getTrainPredictions();
+							if (numPreds <= 2 && preds.size()-1 >= numPreds) {
+								t += "<br>"+s.getTrainPredictions().get(numPreds).getName() + ": "
+										+ s.getTrainPredictions().get(numPreds).getTime().toString() + " Seconds Left";
+								numPreds++;
+							}
+							else {
+								addMorePreds = false;
+							}
+						}
+
+						t += "</html>";
+						return t;
+					}
+				}
+
+				// Create tool tip for a map
+				for(String s : stopMap.keySet()){
+					Point posn = stopMap.get(s);
+
+					if ((x < posn.x + STOP_THRESHOLD) && (x > posn.x - STOP_THRESHOLD)
+							&& (y < posn.y + STOP_THRESHOLD) && (y > posn.y - STOP_THRESHOLD)){
+						t = "<html>"+s;
+
+						t += "</html>";
+						return t;
+					}
+				}
+				return t;
+			}
+		};
 		imageLabel.addMouseListener(this);
 		imageLabel.addMouseMotionListener(this);
-		JLabel depTime = new JLabel("Departure Time");
-		JLabel arrTime = new JLabel("Arrival Time");
+		imageLabel.setToolTipText("Nothing");
+		ToolTipManager.sharedInstance().registerComponent(imageLabel);
+		ToolTipManager.sharedInstance().setInitialDelay(0);
+
+		JLabel depLabel = new JLabel("Departure Time");
+		JLabel arrLabel = new JLabel("Arrival Time");
 
 		JSpinner pickArr = new JSpinner(new SpinnerDateModel());
 		JSpinner.DateEditor arrEditor = new JSpinner.DateEditor(pickArr, "HH:mm");
@@ -210,6 +280,15 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		// Calculate Route button
 		JButton calcRoute = new JButton("Calculate Route");
 		calcRoute.setBackground(FORE_COLOR);
+		calcRoute.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				pathList.clear();
+				for (String s : selectedStops) {
+					pathList.add(TripPlanner.getStopByName(s).stopID);
+				}
+				update();
+			}
+		});
 
 		/**
 		 * Combo boxes
@@ -260,16 +339,15 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		orderedList.setBackground(FORE_COLOR);
 		orderedList.setSelected(true);
 
-		// Create GridBagLayout
+		/**
+		 * Create Layout
+		 * **/
 		GridBagLayout gridbag = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
 		c.fill = GridBagConstraints.BOTH;
-		//Display the window
-		//divide the window into 3 columns
-		//new GridLayout(1,3)
 		frame.setLayout(new GridLayout(1,2));
-		//set window as visible
-		frame.setVisible(true); 
+		// Make the window visible
+		frame.setVisible(true);
 
 		JInternalFrame plannerFrame = newFrame();
 		plannerFrame.setLayout(gridbag);
@@ -281,11 +359,8 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		frame.add(left);
 		frame.add(plannerFrame);
 
-		//c.gridheight = GridBagConstraints.REMAINDER;
 		c.weightx = 1;
 		c.weighty = 1;
-		//c.gridx = 1;
-		//c.gridy = 0;
 		middle.setMinimumSize(new Dimension(800,0));	
 		gridbag.setConstraints(middle, c);
 		plannerFrame.add(middle);
@@ -296,7 +371,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		//c.gridy = 0;
 		right.setMinimumSize(new Dimension(250,500));	
 		gridbag.setConstraints(right, c);
-		plannerFrame.add(right);
+		//plannerFrame.add(right);
 
 		//set internal jframe layouts
 		left.setLayout(gridbag);
@@ -304,10 +379,13 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		//right.setLayout(new GridLayout(3,1,5,5));
 		right.setLayout(gridbag);
 
+		JInternalFrame plannerButtons = newFrame();
+		plannerButtons.setLayout(gridbag);
+		gridbag.setConstraints(plannerButtons, c);
 
 		//////////////////////////////////////
 		//set up layout for rightmost jframe
-		JInternalFrame right1 = newFrame(2,FORE_COLOR);
+		JInternalFrame right1 = newFrame(0,FORE_COLOR);
 		right1.setMinimumSize(new Dimension(300,40));
 		right1.setLayout(new FlowLayout());
 		c.gridwidth = GridBagConstraints.REMAINDER; //end row
@@ -316,46 +394,47 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		gridbag.setConstraints(right1, c);
 		right.add(right1);
 
-		JInternalFrame right2 = newFrame(0, new Color(200,200,200));
-		right2.setMinimumSize(new Dimension(300,40));
-		right2.setLayout(new FlowLayout());
+		JInternalFrame stopTableControls = newFrame(0, new Color(200,200,200));
+		stopTableControls.setMinimumSize(new Dimension(300,40));
+		stopTableControls.setLayout(new GridLayout(1,3));
 		c.gridwidth = GridBagConstraints.REMAINDER; //end row
 		c.weightx = 0;
 		c.weighty = 0;
-		gridbag.setConstraints(right2, c);
-		right.add(right2);
+		gridbag.setConstraints(stopTableControls, c);
+		right.add(stopTableControls);
 
-		JInternalFrame right3 = newFrame();
-		right3.setMinimumSize(new Dimension(300,40));
-		//right3.setLayout(new FlowLayout());
+		JInternalFrame right3 = newFrame(0,new Color(200,200,200));
+		//right3.setMinimumSize(new Dimension(300,40));
+		right3.setLayout(new GridLayout(1,2));
 		c.weighty = 1;
 		c.gridwidth = GridBagConstraints.REMAINDER; //end row
 		gridbag.setConstraints(right3, c);
 		right.add(right3);
 
 		JInternalFrame right4 = newFrame(0,new Color(200,200,200));
-		right4.setMinimumSize(new Dimension(300,40));
+		//right4.setMinimumSize(new Dimension(300,40));
 		right4.setLayout(new FlowLayout());
-		c.weighty = 0;
+		c.weightx = 1;
+		//c.weighty = 0;
 		c.gridwidth = GridBagConstraints.REMAINDER; //end row
 		gridbag.setConstraints(right4, c);
-		right.add(right4);
+		plannerButtons.add(right4);
 
 		JInternalFrame right5 = newFrame(0,new Color(200,200,200));
-		right5.setMinimumSize(new Dimension(300,40));
+		//right5.setMinimumSize(new Dimension(300,40));
 		right5.setLayout(new GridLayout(3,1,5,5));
 		c.weighty = 1;
 		c.gridwidth = GridBagConstraints.REMAINDER; //end row
 		gridbag.setConstraints(right5, c);
-		right.add(right5);
+		plannerButtons.add(right5);
 
-		JInternalFrame right6 = newFrame();
-		//right6.setMinimumSize(new Dimension(300,40));
+		JInternalFrame right6 = newFrame(0,new Color(200,200,200));
+		//right6.setMinimumSize(new Dimension(300,60));
 		right6.setLayout(new GridLayout(1,2,5,5));
 		c.weighty = 1;
 		c.gridwidth = GridBagConstraints.REMAINDER; //end row
 		gridbag.setConstraints(right6, c);
-		right.add(right6);
+		plannerButtons.add(right6);
 
 		JInternalFrame lastLeft = newFrame(0,new Color(220,220,220));
 		lastLeft.setLayout(new GridLayout(3,1,5,5));
@@ -370,7 +449,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		///////////////////////////////////////
 
 		//////////////////////////////////////
-		//set up layout for LEFT jframe
+		// Set up layout for LEFT JFrame
 		JInternalFrame topLeft = newFrame(2,FORE_COLOR);
 		topLeft.setLayout(new FlowLayout());
 		topLeft.setMinimumSize(new Dimension(300,40));
@@ -381,8 +460,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		gridbag.setConstraints(topLeft, c);
 		left.add(topLeft);
 
-		middleLeft = newFrame();
-		//middleLeft.setBackground(new Color(255,255,255));
+		middleLeft = newFrame(0,Color.black);
 		middleLeft.setLayout(new FlowLayout());
 		//middleLeft.setMinimumSize(new Dimension(100,100));
 		c.gridwidth = GridBagConstraints.REMAINDER; //end row
@@ -391,6 +469,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		gridbag.setConstraints(middleLeft, c);
 		left.add(middleLeft);
 
+		/*
 		JInternalFrame bottomLeft = newFrame(2,FORE_COLOR);
 		bottomLeft.setLayout(new FlowLayout());
 		bottomLeft.setMinimumSize(new Dimension(300,40));
@@ -399,13 +478,13 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		c.weighty = 0;
 		gridbag.setConstraints(bottomLeft, c);
 		left.add(bottomLeft);
+		 */
 		///////////////////////////////////////
 
-		//////////////////////////////////////
-		//set up layout for LEFT jframe
+		/////////////////////////////////////
 		JInternalFrame topMiddle = newFrame(2,FORE_COLOR);
-		//topMiddle.setLayout(new GridLayout(1,3,5,5));
-		topMiddle.setLayout(new FlowLayout());
+		topMiddle.setLayout(new GridLayout(1,3));
+		//topMiddle.setLayout(new FlowLayout());
 		topMiddle.setMinimumSize(new Dimension(300,40));
 		c.gridwidth = GridBagConstraints.REMAINDER; //end row
 		//c2.gridheight = GridBagConstraints.RELATIVE;
@@ -419,43 +498,47 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 		JInternalFrame bottomMiddle = newFrame();
 		//middleLeft.setBackground(new Color(255,255,255));
-		//bottomMiddle.setLayout(new FlowLayout());
-		bottomMiddle.setMinimumSize(new Dimension(300,40));
+		bottomMiddle.setLayout(new GridLayout(2,1));
+		bottomMiddle.setMinimumSize(new Dimension(300,400));
 		//middleLeft.setMinimumSize(new Dimension(100,100));
 		c.gridwidth = GridBagConstraints.REMAINDER; //end row
 		//c2.gridheight = GridBagConstraints.RELATIVE;
-		c.weighty = 1;
+		c.weighty = 0.5;
 		gridbag.setConstraints(bottomMiddle, c);
 		middle.add(bottomMiddle);
 		///////////////////////////////////////
 
-		//add to left jframe
+		/**
+		 * Left JFrame
+		 * **/
+		// Add test system button
 		topLeft.add(testSystem);
+		// Add the map
 		createMap();
 		middleLeft.add(imageLabel);
-		//bottomLeft.add(drawTrains);
 
-		//add to middle jframe
+		//add to right jframe
 		createTable(bottomMiddle);
 		createStopsTable(right3);
 		right1.add(orderedList);
 
-		right2.add(addStop);
-		right2.add(removeStop);
-		right2.add(selectStop);
+		stopTableControls.add(addStop);
+		stopTableControls.add(selectStop);
+		stopTableControls.add(removeStop);
+		right3.add(plannerButtons);
 		right4.add(calcRoute);
 		right5.add(earliestDep);
 		right5.add(fewestTrans);
 		right5.add(earliestArr);
 
-		lastLeft.add(depTime);
+		lastLeft.add(depLabel);
 		lastLeft.add(depFrame);
 		depFrame.add(pickDep);
-		lastRight.add(arrTime);
+		lastRight.add(arrLabel);
 		lastRight.add(arrFrame);
 		arrFrame.add(pickArr);
 
-
+		bottomMiddle.add(right);
 
 		//pack the frames neatly		
 		frame.pack();
@@ -512,7 +595,36 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			}
 		};
 		tableModel.addTableModelListener(this);
-		table = new JTable(tableModel);
+		table = new JTable(tableModel) {
+			private static final long serialVersionUID = -1917817069879534003L;
+
+			// Draw Line color behind row
+			@Override
+			public Component prepareRenderer (TableCellRenderer renderer, int index_row, int index_col){  
+				Component comp = super.prepareRenderer(renderer, index_row, index_col);
+
+				if (data.length > 0) {
+					if (data[index_row][0].equals("Orange")) {
+						comp.setBackground(new Color(255,100,0));
+					}
+					else if (data[index_row][0].equals("Red")) {
+						comp.setBackground(Color.red);
+						
+					}
+					else if (data[index_row][0].equals("Blue")) {
+						comp.setBackground(Color.blue);
+					}
+					
+					// Change font color
+					comp.setForeground(Color.white);
+				}
+
+				if(isCellSelected(index_row, index_col)){
+					comp.setBackground(new Color(0, 0, 112));  
+				}
+				return comp;
+			}  
+		};
 		table.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY, 1));
 		table.setShowVerticalLines(true);
 		table.setSize(700,700);
@@ -531,8 +643,8 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	 **/
 	public static void update() {
 		Graphics2D g = (Graphics2D)map.getGraphics();
-		//g.clearRect(0, 0, imageLabel.getWidth(), imageLabel.getHeight());
 		createMap();
+		drawTrainPath(pathList);
 		trainMap.clear();
 		/*
 		trans = new AffineTransform(g.getTransform());
@@ -559,7 +671,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			// Iterate through stops
 			for (Stop s : stops) {
 				// Create row to hold stop info
-				Object[] row = { s.Line, s.stop_name, s.stopID };
+				Object[] row = { s.Line, s.stop_name };
 				// Add row to data array
 				data[stops.indexOf(s)] = row;
 			}
@@ -570,35 +682,25 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		// iterate through lines
 		for (TrainLine line : trainLines) {
 			String lineName = line.getLine();
+
 			// Get list of trains for each line
 			LinkedList<Train> trains = line.getTrains();
 			for (int t = 0; t < trains.size(); t++) {
 				Train train = trains.get(t);
-
 				Object[] row = new Object[4];
+				String nextString = train.getTrainPredictions().get(0).getName();
+				int timeLeft = train.getTrainPredictions().get(0).getTime();
+				String destString = train.getTrainDestination();
+				row[0] = lineName;
+				row[1] = nextString;
+				row[2] = timeLeft;
+				row[3] = train.getTrainDestination();
 
-				if (train.getTrainPredictions() != null) {
-					String nextString = train.getTrainPredictions().get(0).getName();
-					int timeLeft = train.getTrainPredictions().get(0).getTime();
-					String destString = train.getTrainDestination();
-					row[0] = train.getTrainID();
-					row[1] = lineName;
-					row[2] = nextString;
-					row[3] = train.getTrainDestination();
-
-					// Draw trains on map
-					if(stopMap.containsKey(nextString.toUpperCase()) 
-							&& stopMap.containsKey(destString.toUpperCase())
-							&& !nextString.equals(destString)) {
-						createTrain(train);
-
-					}
-				}
-				else {
-					row[0] = train.getTrainID();
-					row[1] = lineName;
-					row[2] = "";
-					row[3] = train.getTrainDestination();
+				// Draw trains on map
+				if(stopMap.containsKey(nextString.toUpperCase()) 
+						&& stopMap.containsKey(destString.toUpperCase())
+						&& !nextString.equals(destString)) {
+					createTrain(train);
 				}
 
 				// Add trains to data array for table
@@ -622,17 +724,31 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 	//returns the last stop
 	//NF
-	public static String getLastStop(Stop curStop, Stop dest){
-		String tempString = dest.stop_name;
-		if(!curStop.StartOfLine || !curStop.EndOfLine){
-			if(curStop.stopID < dest.stopID){
-				String temp2 =  TripPlanner.getStopNameByID(curStop.stopID - 2);
+	public static String getLastStop(Stop nextStop, Stop dest){
+		String tempString = nextStop.stop_name;
+		if (!nextStop.EndOfLine) {
+			if(nextStop.stopID < dest.stopID){
+				String temp2 =  TripPlanner.getStopNameByID(nextStop.stopID - 2);
 				if(stops.contains(TripPlanner.getStopByName(tempString))){
 					tempString = temp2;
 				}
 			}
-			if(curStop.stopID > dest.stopID){
-				String temp2 = TripPlanner.getStopNameByID(curStop.stopID + 2);
+			if(nextStop.stopID > dest.stopID){
+				String temp2 = TripPlanner.getStopNameByID(nextStop.stopID + 2);
+				if(stops.contains(TripPlanner.getStopByName(tempString))){
+					tempString = temp2;
+				}
+			}
+		}
+		else {
+			if(nextStop.stopID < dest.stopID){
+				String temp2 =  TripPlanner.getStopNameByID(nextStop.stopID + 2);
+				if(stops.contains(TripPlanner.getStopByName(tempString))){
+					tempString = temp2;
+				}
+			}
+			if(nextStop.stopID > dest.stopID){
+				String temp2 = TripPlanner.getStopNameByID(nextStop.stopID - 2);
 				if(stops.contains(TripPlanner.getStopByName(tempString))){
 					tempString = temp2;
 				}
@@ -667,6 +783,12 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		stopsTable = new JTable(stopsTableModel);
 		stopsTable.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY, 1));
 		stopsTable.setShowVerticalLines(true);
+
+		/*
+		stopsTable.setDragEnabled(true);
+		stopsTable.setDropMode(DropMode.INSERT_ROWS);
+		//stopsTable.setTransferHandler(new TableRowTransferHandler(table)); 
+		 */
 
 		// Selection handler
 		ListSelectionModel selectModel = stopsTable.getSelectionModel();
@@ -734,14 +856,13 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		int nextX = stopMap.get(nextStop.toUpperCase()).x;
 		int nextY = stopMap.get(nextStop.toUpperCase()).y;
 
-		//if(TripPlanner.getStopNameByID(next.stopID).equals(TripPlanner.getStopNameByID(destination.stopID))){
 		if(nextStop.equals(dest)){
 			x = lastX;
 			y = lastY;
 		}
 		// Previous stop position
 		if(stopMap.containsKey(lastStop.toUpperCase())) {
-			lastX = stopMap.get(lastStop.toUpperCase()).x;		
+			lastX = stopMap.get(lastStop.toUpperCase()).x;	
 			lastY = stopMap.get(lastStop.toUpperCase()).y;
 		}
 		//System.out.println(lastStop.toUpperCase());
@@ -759,19 +880,27 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		}
 		// Draw the train in between stops
 		else {
-			//float lerpTime = (float)timeLeft/MAX_TIME;
+			float lerpTime = (float)timeLeft/MAX_TIME;
 			//System.out.println(lerpTime);
-			//if(lerpTime >= 1.0f){ lerpTime = 1.0f;} 
-			//else if(lerpTime <= 0.0f){ lerpTime = 0.0f;}
-			//x = (int)(LinearInterpolate((float)lastX, (float)nextX, lerpTime)*100)/100; //(float)timeLeft/MAX_TIME
-			//y = (int)(LinearInterpolate((float)lastY, (float)nextY, lerpTime)*100)/100; //(float)timeLeft/MAX_TIME			
+			if(lerpTime >= 1.0f){ lerpTime = 1.0f;}
+			else if(lerpTime <= 0.0f){ lerpTime = 0.0f;}
+			x = (int)(LinearInterpolate((float)lastX, (float)nextX, lerpTime)*100)/100; //(float)timeLeft/MAX_TIME
+			System.out.println(t.getTrainID());
+			System.out.println("Last X: "+lastX);
+			System.out.println("Next X: "+nextX);
+			System.out.println("Last Y: "+lastY);
+			System.out.println("Next Y: "+nextY);
+			//System.out.println("X: "+x);
+			//System.out.println("Y: "+y);
+			y = (int)(LinearInterpolate((float)lastY, (float)nextY, lerpTime)*100)/100; //(float)timeLeft/MAX_TIME			
 			//System.out.println((int)(LinearInterpolate(0f, (float)nextX, lerpTime)*100)/100);			
-			x = (nextX+lastX)/2;
-			y = (nextY+lastY)/2;
+			//x = (nextX+lastX)/2;
+			//y = (nextY+lastY)/2;
 		}
 
 		if(last.stopID < next.stopID){
 			g.setColor(Color.black);
+			// SOUTH --purple
 			g.fillOval(x-18, y-9, 15, 15);
 			g.setColor(new Color(220,50,220));
 			g.fillOval(x-15, y-6, 11, 11);
@@ -779,9 +908,10 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		}
 		if(last.stopID > next.stopID){
 			g.setColor(Color.black);
-			g.fillOval(x-3, y-9, 15, 15);
+			// NORTH --green
+			g.fillOval(x, y-9, 15, 15);
 			g.setColor(new Color(0,220,50));
-			g.fillOval(x, y-6, 11, 11);
+			g.fillOval(x+3, y-6, 11, 11);
 		}
 
 
@@ -797,16 +927,18 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		stopMap.put("SULLIVAN",new Point(799,298));
 		stopMap.put("COMMUNITY COLLEGE",new Point(801,377));
 		stopMap.put("NORTH STATION",new Point(813,471));
-		stopMap.put("CHINATOWN",new Point(724,837));
-		stopMap.put("TUFTS MEDICAL CENTER",new Point(684,872));
-		stopMap.put("BACK BAY",new Point(652,907));
-		stopMap.put("MASS AVE",new Point(616,944));
-		stopMap.put("RUGGLES",new Point(579,979));
-		stopMap.put("ROXBURY CROSSING",new Point(544,1011));
-		stopMap.put("JACKSON SQUARE",new Point(506,1049));
-		stopMap.put("STONY BROOK",new Point(472,1085));
-		stopMap.put("GREEN STREET",new Point(433,1123));
-		stopMap.put("FOREST HILLS",new Point(400,1158));
+
+
+		stopMap.put("CHINATOWN",new Point(734,821));
+		stopMap.put("TUFTS MEDICAL CENTER",new Point(680,876));
+		stopMap.put("BACK BAY",new Point(617,939));
+		stopMap.put("MASS AVE",new Point(560,994));
+		stopMap.put("RUGGLES",new Point(504,1051));
+		stopMap.put("ROXBURY CROSSING",new Point(449,1106));
+		stopMap.put("JACKSON SQUARE",new Point(400,1157));
+		stopMap.put("STONY BROOK",new Point(345,1211));
+		stopMap.put("GREEN STREET",new Point(291,1264));
+		stopMap.put("FOREST HILLS",new Point(239,1315));
 		stopMap.put("DOWNTOWN CROSSING",new Point(798,761));
 		stopMap.put("STATE",new Point(870,681));
 		stopMap.put("HAYMARKET",new Point(867,561));
@@ -853,7 +985,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		}
 		return time;
 	}
-	
+
 	public static void drawLineFromPoint(Point startPosn, Point endPosn, Color c){
 		Graphics2D g = (Graphics2D)map.getGraphics();
 		g.setStroke(new BasicStroke(10F));
@@ -861,7 +993,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		g.drawLine(startPosn.x, startPosn.y, endPosn.x, endPosn.y);
 		imageLabel.repaint();
 	}
-	
+
 	public static void drawTrainPath(LinkedList<Integer> goals){
 		Stack<Integer> results = new Stack<Integer>();
 		results = TripPlanner.graph.multiSearch(goals);
@@ -874,7 +1006,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		}
 		Views.drawPath(path, PATH_COLOR);
 	}
-	
+
 	public static void drawPath(LinkedList<Stop> path, Color color) {
 		for (int s = 0; s < path.size()-1; s++) {
 			Point startPos = stopMap.get(path.get(s).stop_name.toUpperCase());
@@ -895,10 +1027,10 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 						"What is your name?",
 						"Enter your name",
 						JOptionPane.QUESTION_MESSAGE);
-				//MapStop stop1 = new MapStop(e.getX(),e.getY());
+				//Point stop1 = new Point(e.getX(),e.getY());
 				//stopMap.put(name, stop1);
 				//drawNode(stopMap.get("Downtown Crossing").x,stopMap.get("Downtown Crossing").y,g);
-				System.out.println("stopMap.put('"+name+"',new MapStop("+e.getX()+","+e.getY()+"));");
+				System.out.println("stopMap.put('"+name+"',new Point("+e.getX()+","+e.getY()+"));");
 			 */
 
 
@@ -934,11 +1066,9 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		}
 	}
 
-	/**
-	 * Unimplemented required methods
-	 * **/
 	@Override
 	public void mouseMoved(MouseEvent e) {
+		/*
 		update();
 		Graphics2D g = (Graphics2D)map.getGraphics();
 		int x = e.getX();
@@ -997,14 +1127,14 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 				g.drawBytes(s.getBytes(),0,s.getBytes().length,posn.x+30,posn.y-5);
 				g.dispose();	    	
 				imageLabel.repaint();
-
 			}
-			else if(!((x<posn.x+15) && (x>posn.x-15) && (y<posn.y+15) && (y>posn.y-15))){
-
-			}
-		}
+		}*/
 
 	}
+
+	/**
+	 * Unimplemented required methods
+	 * **/
 	@Override
 	public void mouseEntered(MouseEvent e) {
 
