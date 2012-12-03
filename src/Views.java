@@ -54,12 +54,14 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	public static DefaultTableModel stopsTableModel;
 	// Table data
 	static Object[][] data;
+	// Row Colors for table
+	static LinkedList<Color> rowColors = new LinkedList<Color>();
 	// Stops table data
 	static Object[][] stopsData;
 	// Column names for the list of trains
-	private static String[] trainColumns = {"Line", "Next Stop", "Time To Next Stop", "Destination"};
+	private static String[] trainColumns = {"Next Stop", "Time To Next Stop", "Destination"};
 	// Column names for the list of stops
-	private static String[] stopColumns = {"Line", "Name"};
+	private static String[] stopColumns = {"Name"};
 	//
 	private static String[] stopsTableColumns = {"Selected Stops"};
 	private static JButton removeStop;
@@ -603,21 +605,12 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			public Component prepareRenderer (TableCellRenderer renderer, int index_row, int index_col){  
 				Component comp = super.prepareRenderer(renderer, index_row, index_col);
 
-				if (data.length > 0) {
-					if (data[index_row][0].equals("Orange")) {
-						comp.setBackground(new Color(255,100,0));
-					}
-					else if (data[index_row][0].equals("Red")) {
-						comp.setBackground(Color.red);
-						
-					}
-					else if (data[index_row][0].equals("Blue")) {
-						comp.setBackground(Color.blue);
-					}
-					
+				try {
+					comp.setBackground(rowColors.get(index_row));
 					// Change font color
 					comp.setForeground(Color.white);
 				}
+				catch (IndexOutOfBoundsException e) {}
 
 				if(isCellSelected(index_row, index_col)){
 					comp.setBackground(new Color(0, 0, 112));  
@@ -646,6 +639,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		createMap();
 		drawTrainPath(pathList);
 		trainMap.clear();
+		rowColors.clear();
 		/*
 		trans = new AffineTransform(g.getTransform());
 		trans.scale(scaleX, scaleY);
@@ -662,6 +656,40 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 			// initialize length of data array
 			data = new Object[numTrains][];
+
+			// Counter for rows in data array
+			int counter = 0;
+			// iterate through lines
+			for (TrainLine line : trainLines) {
+				String lineName = line.getLine();
+
+				// Get list of trains for each line
+				LinkedList<Train> trains = line.getTrains();
+				for (int t = 0; t < trains.size(); t++) {
+					Train train = trains.get(t);
+					Object[] row = new Object[3];
+					String nextString = train.getTrainPredictions().get(0).getName();
+					int timeLeft = train.getTrainPredictions().get(0).getTime();
+					String destString = train.getTrainDestination();
+					row[0] = nextString;
+					row[1] = timeLeft;
+					row[2] = train.getTrainDestination();
+					rowColors.add(lineToColor(lineName));
+
+					// Draw trains on map
+					if(stopMap.containsKey(nextString.toUpperCase()) 
+							&& stopMap.containsKey(destString.toUpperCase())
+							&& !nextString.equals(destString)) {
+						createTrain(train);
+					}
+
+					// Add trains to data array for table
+					if (showTrains) {
+						data[counter] = row;
+						counter++;
+					}
+				}
+			}
 		}
 
 		// If the stops should be shown
@@ -671,43 +699,10 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			// Iterate through stops
 			for (Stop s : stops) {
 				// Create row to hold stop info
-				Object[] row = { s.Line, s.stop_name };
+				Object[] row = { s.stop_name };
+				rowColors.add(lineToColor(s.Line));
 				// Add row to data array
 				data[stops.indexOf(s)] = row;
-			}
-		}
-
-		// Counter for rows in data array
-		int counter = 0;
-		// iterate through lines
-		for (TrainLine line : trainLines) {
-			String lineName = line.getLine();
-
-			// Get list of trains for each line
-			LinkedList<Train> trains = line.getTrains();
-			for (int t = 0; t < trains.size(); t++) {
-				Train train = trains.get(t);
-				Object[] row = new Object[4];
-				String nextString = train.getTrainPredictions().get(0).getName();
-				int timeLeft = train.getTrainPredictions().get(0).getTime();
-				String destString = train.getTrainDestination();
-				row[0] = lineName;
-				row[1] = nextString;
-				row[2] = timeLeft;
-				row[3] = train.getTrainDestination();
-
-				// Draw trains on map
-				if(stopMap.containsKey(nextString.toUpperCase()) 
-						&& stopMap.containsKey(destString.toUpperCase())
-						&& !nextString.equals(destString)) {
-					createTrain(train);
-				}
-
-				// Add trains to data array for table
-				if (showTrains) {
-					data[counter] = row;
-					counter++;
-				}
 			}
 		}
 
@@ -974,6 +969,24 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		stopMap.put("FIELDS CORNER",new Point(797,1230));
 		stopMap.put("SHAWMUT",new Point(799,1282));
 		stopMap.put("ASHMONT",new Point(799,1342));
+	}
+
+	/**
+	 * Takes in a line name and returns the corresponding color
+	 * @author AG
+	 * **/
+	private static Color lineToColor(String line) {
+		if (line.equals("Orange")) {
+			return new Color(255,100,0);
+		}
+		else if (line.equals("Red")) {
+			return Color.red;
+
+		}
+		else if (line.equals("Blue")) {
+			return Color.blue;
+		}
+		return Color.white;
 	}
 
 	//returns an array of strings from min to max
