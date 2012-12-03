@@ -1,4 +1,5 @@
 import java.awt.*;
+
 import javax.swing.*; 
 import java.io.File;
 import java.awt.event.ActionEvent;
@@ -12,9 +13,6 @@ import java.util.LinkedList;
 import javax.imageio.ImageIO;
 import javax.swing.event.*;
 import javax.swing.table.*;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.Map;
 /**
  * Create the main GUI of our application
  * **/
@@ -24,7 +22,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	 * Map declarations
 	 * **/
 	public static HashMap<String,Point> stopMap = new HashMap<String,Point>(70);
-	public static HashMap<String,Point> trainMap = new HashMap<String,Point>(70);
+	public static HashMap<Train,Point> trainMap = new HashMap<Train,Point>(70);
 	public static final String IMAGE_PATH = "mbta.bmp";
 	public static Image map;
 	public static JLabel imageLabel;
@@ -33,8 +31,8 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	static double scaleY = 1.0;
 	static AffineTransform trans;
 
-	public static final int MAX_TIME = 1000;
-	public static final int MIN_TIME = 30;
+	public static final int MAX_TIME = 1300;
+	public static final int MIN_TIME = 15;
 
 	public static LinkedList<TrainLine> trainLines = new LinkedList<TrainLine>();
 	private static LinkedList<Stop> stops;
@@ -244,28 +242,52 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		c.fill = GridBagConstraints.BOTH;
 		//Display the window
 		//divide the window into 3 columns
-		frame.setLayout(new GridLayout(1,3));
+		//new GridLayout(1,3)
+		frame.setLayout(new GridLayout(1,2));
 		//set window as visible
 		frame.setVisible(true); 
-
+	
+		JInternalFrame plannerFrame = newFrame();
+		plannerFrame.setLayout(gridbag);
 		//create left, middle, right internal jframes
 		JInternalFrame left = newFrame();
 		JInternalFrame right = newFrame();
 		JInternalFrame middle = newFrame();
+		
+		frame.add(left);
+		frame.add(plannerFrame);
+		
+		//c.gridheight = GridBagConstraints.REMAINDER;
+		c.weightx = 1;
+		c.weighty = 1;
+		//c.gridx = 1;
+		//c.gridy = 0;
+		middle.setMinimumSize(new Dimension(800,0));	
+		gridbag.setConstraints(middle, c);
+		plannerFrame.add(middle);
 
+		//c.gridheight = GridBagConstraints.REMAINDER;
+		c.weightx = 0;
+		//c.gridx = 2;
+		//c.gridy = 0;
+		right.setMinimumSize(new Dimension(250,500));	
+		gridbag.setConstraints(right, c);
+		plannerFrame.add(right);
+		
 		//set internal jframe layouts
 		left.setLayout(gridbag);
 		middle.setLayout(gridbag);
 		//right.setLayout(new GridLayout(3,1,5,5));
 		right.setLayout(gridbag);
 
+		
 		//////////////////////////////////////
 		//set up layout for rightmost jframe
 		JInternalFrame right1 = newFrame(2,FORE_COLOR);
 		right1.setMinimumSize(new Dimension(300,40));
 		right1.setLayout(new FlowLayout());
 		c.gridwidth = GridBagConstraints.REMAINDER; //end row
-		c.weightx = 1.0;
+		c.weightx = 0.3;
 		c.weighty = 0.0;
 		gridbag.setConstraints(right1, c);
 		right.add(right1);
@@ -408,13 +430,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		lastRight.add(arrFrame);
 		arrFrame.add(pickArr);
 
-
-		left.setMinimumSize(new Dimension(300,40));		
-		middle.setMinimumSize(new Dimension(300,40));		
-		right.setMinimumSize(new Dimension(300,40));		
-		frame.add(left);
-		frame.add(middle);
-		frame.add(right);
+		
 
 		//pack the frames neatly		
 		frame.pack();
@@ -541,7 +557,8 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 					if(stopMap.containsKey(nextString.toUpperCase()) 
 							&& stopMap.containsKey(destString.toUpperCase())
 							&& !nextString.equals(destString)) {
-						drawTrain(nextString, destString, timeLeft, train.getTrainID());
+						createTrain(train);
+						
 					}
 				}
 				else {
@@ -636,9 +653,12 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	 * Draws a train
 	 * @author NF and refactored by AG
 	 * **/
-	public static void drawTrain(String nextStop, String dest, int timeLeft, String id) {
+	public static void createTrain(Train t) {
 		Graphics2D g = (Graphics2D)map.getGraphics();
 
+		String nextStop = t.getTrainPredictions().get(0).getName();
+		int timeLeft = t.getTrainPredictions().get(0).getTime();
+		String dest = t.getTrainDestination();
 		int x = 0;
 		int y = 0;	
 		int lastX = 0;
@@ -680,90 +700,37 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		}
 		// Draw the train in between stops
 		else {
-			float lerpTime = (float)timeLeft/MAX_TIME;
+			//float lerpTime = (float)timeLeft/MAX_TIME;
 			//System.out.println(lerpTime);
 			//if(lerpTime >= 1.0f){ lerpTime = 1.0f;} 
 			//else if(lerpTime <= 0.0f){ lerpTime = 0.0f;}
-			x = (int)(LinearInterpolate((float)lastX, (float)nextX, lerpTime)*100)/100; //(float)timeLeft/MAX_TIME
-			y = (int)(LinearInterpolate((float)lastY, (float)nextY, lerpTime)*100)/100; //(float)timeLeft/MAX_TIME			
+			//x = (int)(LinearInterpolate((float)lastX, (float)nextX, lerpTime)*100)/100; //(float)timeLeft/MAX_TIME
+			//y = (int)(LinearInterpolate((float)lastY, (float)nextY, lerpTime)*100)/100; //(float)timeLeft/MAX_TIME			
 			//System.out.println((int)(LinearInterpolate(0f, (float)nextX, lerpTime)*100)/100);			
-			
-			//x = (nextX+lastX)/2;
-			//y = (nextY+lastY)/2;
+			x = (nextX+lastX)/2;
+			y = (nextY+lastY)/2;
 		}
 
 		if(last.stopID < next.stopID){
 			g.setColor(Color.black);
 			g.fillOval(x-18, y-9, 15, 15);
 			g.setColor(new Color(220,50,220));
-			g.fillOval(x-15, y-6, 9, 9);
+			g.fillOval(x-15, y-6, 11, 11);
 			
 		}
 		if(last.stopID > next.stopID){
 			g.setColor(Color.black);
 			g.fillOval(x-3, y-9, 15, 15);
 			g.setColor(new Color(0,220,50));
-			g.fillOval(x, y-6, 9, 9);
+			g.fillOval(x, y-6, 11, 11);
 		}
 		
-		trainMap.put(id,new Point(x,y));
 		
 		
+		trainMap.put(t,new Point(x,y));
 		g.dispose();
 		imageLabel.repaint();
 	}
-
-	// scales the map on mouse click; scales in for left click, scales out for right click
-	// NF + AG
-	public void mouseClicked(MouseEvent e) {
-		int button = e.getButton();		
-		if (button == MouseEvent.BUTTON1) {
-			//Graphics2D g = (Graphics2D)map.getGraphics();
-
-			/*
-				String name = JOptionPane.showInputDialog(null,
-						"What is your name?",
-						"Enter your name",
-						JOptionPane.QUESTION_MESSAGE);
-				//MapStop stop1 = new MapStop(e.getX(),e.getY());
-				//stopMap.put(name, stop1);
-				//drawNode(stopMap.get("Downtown Crossing").x,stopMap.get("Downtown Crossing").y,g);
-				System.out.println("stopMap.put('"+name+"',new MapStop("+e.getX()+","+e.getY()+"));");
-			 */
-
-
-			System.out.println("button 1");
-			scaleX *= 1.5;
-			scaleY *= 1.5;			
-		}
-
-		/*
-			else if (button == MouseEvent.BUTTON3) {
-				System.out.println("button 3");
-				scaleX /= 1.5;
-				scaleY /= 1.5;
-				createMap(scaleX, scaleY, SCALE_TYPE);
-			}
-		 */
-	}
-
-	//sets the location of the map using the mouse coordinates
-	//NF
-	public void mouseDragged(MouseEvent e) {		
-		imageLabel.setLocation(e.getX() - draggedAtX + imageLabel.getX(),
-				e.getY() - draggedAtY + imageLabel.getY());		
-	}
-
-	//obtains the current mouse coordinates upon mousePress
-	//NF
-	public void mousePressed(MouseEvent e) {
-
-		if (e.getSource() == imageLabel) {
-			draggedAtX = e.getX();
-			draggedAtY = e.getY();
-		}
-	}
-
 	public static void pushHash(){
 		stopMap.put("OAK GROVE",new Point(799,77));
 		stopMap.put("MALDEN",new Point(798,143));
@@ -827,22 +794,69 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		}
 		return time;
 	}
-
-	public static void drawPath(LinkedList<Stop> path, Color color) {
+	public static void drawLineFromPoint(Point startPosn, Point endPosn, Color c){
 		Graphics2D g = (Graphics2D)map.getGraphics();
+		g.setStroke(new BasicStroke(10F));
+		g.setColor(c);
+		g.drawLine(startPosn.x, startPosn.y, endPosn.x, endPosn.y);
+		imageLabel.repaint();
+	}
+	public static void drawPath(LinkedList<Stop> path, Color color) {
 		for (int s = 0; s < path.size()-1; s++) {
 			Point startPos = stopMap.get(path.get(s).stop_name.toUpperCase());
-			int startX = startPos.x;
-			int startY = startPos.y;
-
 			Point endPos = stopMap.get(path.get(s+1).stop_name.toUpperCase());
-			int endX = endPos.x;
-			int endY = endPos.y;
+			drawLineFromPoint(startPos, endPos, color);
+		}
+	}
 
-			g.setStroke(new BasicStroke(10F));
-			g.setColor(color);
-			g.drawLine(startX, startY, endX, endY);
-			imageLabel.repaint();
+	// scales the map on mouse click; scales in for left click, scales out for right click
+	// NF + AG
+	public void mouseClicked(MouseEvent e) {
+		int button = e.getButton();		
+		if (button == MouseEvent.BUTTON1) {
+			//Graphics2D g = (Graphics2D)map.getGraphics();
+
+			/*
+				String name = JOptionPane.showInputDialog(null,
+						"What is your name?",
+						"Enter your name",
+						JOptionPane.QUESTION_MESSAGE);
+				//MapStop stop1 = new MapStop(e.getX(),e.getY());
+				//stopMap.put(name, stop1);
+				//drawNode(stopMap.get("Downtown Crossing").x,stopMap.get("Downtown Crossing").y,g);
+				System.out.println("stopMap.put('"+name+"',new MapStop("+e.getX()+","+e.getY()+"));");
+			 */
+
+
+			System.out.println("button 1");
+			scaleX *= 1.5;
+			scaleY *= 1.5;			
+		}
+
+		/*
+			else if (button == MouseEvent.BUTTON3) {
+				System.out.println("button 3");
+				scaleX /= 1.5;
+				scaleY /= 1.5;
+				createMap(scaleX, scaleY, SCALE_TYPE);
+			}
+		 */
+	}
+
+	//sets the location of the map using the mouse coordinates
+	//NF
+	public void mouseDragged(MouseEvent e) {
+		imageLabel.setLocation(e.getX() - draggedAtX + imageLabel.getX(),
+				e.getY() - draggedAtY + imageLabel.getY());		
+	}
+
+	//obtains the current mouse coordinates upon mousePress
+	//NF
+	public void mousePressed(MouseEvent e) {
+
+		if (e.getSource() == imageLabel) {
+			draggedAtX = e.getX();
+			draggedAtY = e.getY();
 		}
 	}
 
@@ -851,24 +865,49 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	 * **/
 	@Override
 	public void mouseMoved(MouseEvent e) {
+		update();
 		Graphics2D g = (Graphics2D)map.getGraphics();
 	    int x = e.getX();
 	    int y = e.getY();
 	    
-	    for(String s : trainMap.keySet()){
+	    for(Train s : trainMap.keySet()){
 	    Point posn = trainMap.get(s);
-	    
+	    System.out.println(s.getTrainID());
 	    if((x<posn.x+15) && (x>posn.x-15) && (y<posn.y+15) && (y>posn.y-15)){
 	    	//update();
 	    	//System.out.println("asf");
+	    	g.setColor(Color.darkGray);
+	    	g.fillRect(posn.x+15, posn.y-15, 230, 70);
 	    	g.setColor(Color.LIGHT_GRAY);
-	    	g.fillRect(posn.x+20, posn.y-20, 100, 20);
+	    	g.fillRect(posn.x+20, posn.y-20, 230, 70);
 	    	g.setColor(Color.black);
-	    	g.drawBytes(s.getBytes(),0,s.getBytes().length,posn.x+30,posn.y-5);
+			LinkedList<Integer> goals = new LinkedList<Integer>();
+		    
+			for(Prediction p : s.getTrainPredictions()){
+				//System.out.println(p.getID());
+				goals.add(TripPlanner.getStopByName(p.getName()).stopID);
+			}
+			
+			//drawLineFromPoint(posn, stopMap.get(s.getTrainPredictions().get(0).getName()), Color.pink);
+			String predictions = "Schedule:";
+	    	//TripPlanner.drawTrainPath(goals);
+	    	g.drawBytes(predictions.getBytes(),0,predictions.length(),posn.x+30,posn.y-5);
+	    	g.drawBytes(s.getTrainPredictions().get(0).getName().getBytes(),0,s.getTrainPredictions().get(0).getName().length(),posn.x+30,posn.y+10);
+	    	g.drawBytes(s.getTrainPredictions().get(1).getName().getBytes(),0,s.getTrainPredictions().get(1).getName().length(),posn.x+30,posn.y+25);
+	    	g.drawBytes(s.getTrainPredictions().get(2).getName().getBytes(),0,s.getTrainPredictions().get(2).getName().length(),posn.x+30,posn.y+40);
+	    	
+	    	String secondsLeft1 = s.getTrainPredictions().get(0).getTime().toString() + "Seconds Left";
+	    	String secondsLeft2 = s.getTrainPredictions().get(1).getTime().toString() + "Seconds Left";
+	    	String secondsLeft3 = s.getTrainPredictions().get(2).getTime().toString() + "Seconds Left";
+	    	
+	    	g.drawBytes(secondsLeft1.getBytes(),0,secondsLeft1.length(),posn.x+150,posn.y+10);
+	    	g.drawBytes(secondsLeft2.getBytes(),0,secondsLeft2.length(),posn.x+150,posn.y+25);
+	    	g.drawBytes(secondsLeft3.getBytes(),0,secondsLeft3.length(),posn.x+150,posn.y+40);
+	    	
 	    	g.dispose();	    	
 	    	imageLabel.repaint();
 	    	
-	    }
+	    	}
 
 	    }
 	    
@@ -886,8 +925,10 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		    	imageLabel.repaint();
 		    	
 		    }
-
+		    else if(!((x<posn.x+15) && (x>posn.x-15) && (y<posn.y+15) && (y>posn.y-15))){
+		    	
 		    }
+		}
 	    
 	}
 	@Override

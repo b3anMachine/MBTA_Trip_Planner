@@ -135,13 +135,18 @@ public abstract class TripPlanner {
 
 		createUpdateTask();
 
-		Stack<Integer> results = new Stack<Integer>();
+		
 		LinkedList<Integer> goals = new LinkedList<Integer>();
 		goals.add(70061);
 		goals.add(70093);
 		goals.add(70036);
 		goals.add(70059);
 		goals.add(70037);
+		drawTrainPath(goals);
+		
+	}
+	public static void drawTrainPath(LinkedList<Integer> goals){
+		Stack<Integer> results = new Stack<Integer>();
 		results = graph.multiSearch(goals);
 		LinkedList<Stop> path = new LinkedList<Stop>();
 		for (int r : results) {
@@ -153,7 +158,6 @@ public abstract class TripPlanner {
 		Color newColor = Color.white;
 		Views.drawPath(path, new Color(newColor.getRed(),newColor.getGreen(),newColor.getBlue(),100));
 	}
-
 	// Sets up timer to update trains every 10 seconds
 	// CM and AG and NF
 	private static void createUpdateTask() {

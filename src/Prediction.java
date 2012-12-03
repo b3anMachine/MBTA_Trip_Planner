@@ -14,7 +14,7 @@ public class Prediction {
 	// Name of the stop
 	private String stopName;
 	// Time in seconds until stop is reached
-	private int seconds;
+	private Integer seconds;
 	
 	// Prediction constructor
 	public Prediction(Object predObj) {
@@ -42,7 +42,7 @@ public class Prediction {
 		return stopName;
 	}
 	
-	public int getTime() {
+	public Integer getTime() {
 		return seconds;
 	}
 }
