@@ -1,6 +1,7 @@
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Stack;
+import java.util.*;
 
 /**
  * 
@@ -66,4 +67,29 @@ public class TrainGraph {
 		// No path was found
 		return results; 
 	}
+	
+	// Unordered list search
+	//  CM
+	public  Stack<Integer> unorderedSearch(LinkedList<Integer> goals) {
+		//List to store possible routes
+		LinkedList<Integer> remainingGoals = goals;
+		Collections.sort(remainingGoals);
+		return multiSearch(remainingGoals);
+		
+		//LinkedList<Stack<Integer>> possibilities = new LinkedList<Stack<Integer>>();
+		
+		/*
+		// Calculate the possible routes
+		for (int p = 0; p < remainingGoals.size(); p++) {
+			LinkedList<Integer> stopPair = new LinkedList<Integer>();
+			stopPair.add(remainingGoals.get(p));
+			stopPair.add(remainingGoals.get(p+1));
+			Stack<Integer> tempResults = multiSearch(stopPair);
+			possibilities.add(tempResults);
+			remainingGoals.remove(p);
+		}*/
+			
+		}
+	
+	
 }
