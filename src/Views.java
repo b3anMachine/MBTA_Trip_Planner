@@ -141,6 +141,11 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		 * **/
 		// The label that holds the map
 		imageLabel = new JLabel() {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = -5687904822158992635L;
+
 			// Custom tool tip handler
 			// AG
 			@Override
@@ -597,7 +602,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			}
 		};
 		tableModel.addTableModelListener(this);
-		table = new JTable(tableModel) {
+		table = new JTable(tableModel)/* {
 			private static final long serialVersionUID = -1917817069879534003L;
 
 			// Draw Line color behind row
@@ -616,8 +621,35 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 					comp.setBackground(new Color(0, 0, 112));  
 				}
 				return comp;
-			}  
+			}
+		}*/;
+		DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer() {
+			private static final long serialVersionUID = 273298630375212139L;
+
+			@Override
+			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column)
+			{
+				Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+
+				try {
+					//if (column == 0) {
+						c.setBackground(rowColors.get(row));
+						// Change font color
+						c.setForeground(Color.white);
+					/*}
+					else {
+						c.setBackground(Color.white);
+						c.setForeground(Color.black);
+					}*/
+				}
+				catch (IndexOutOfBoundsException e) {}
+				
+				return c;
+			}
 		};
+		
+		table.setDefaultRenderer(Object.class, cellRenderer);
+		cellRenderer.setHorizontalAlignment(SwingConstants.CENTER);
 		table.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY, 1));
 		table.setShowVerticalLines(true);
 		table.setSize(700,700);
