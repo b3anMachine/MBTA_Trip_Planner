@@ -1,4 +1,3 @@
-import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -6,7 +5,6 @@ import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 import java.util.TimerTask;
 import java.util.Timer;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -22,7 +20,7 @@ public abstract class TripPlanner {
 	private static final int TIMER_DELAY = 10000; // Milliseconds (10)
 
 	// Train Graph
-	private static TrainGraph graph;
+	static TrainGraph graph;
 
 	// Whether we're using live data or not
 	private static boolean liveData;
@@ -135,7 +133,7 @@ public abstract class TripPlanner {
 
 		createUpdateTask();
 
-		
+		/*
 		LinkedList<Integer> goals = new LinkedList<Integer>();
 		goals.add(70061);
 		goals.add(70093);
@@ -143,21 +141,9 @@ public abstract class TripPlanner {
 		goals.add(70059);
 		goals.add(70037);
 		drawTrainPath(goals);
-		
+		*/
 	}
-	public static void drawTrainPath(LinkedList<Integer> goals){
-		Stack<Integer> results = new Stack<Integer>();
-		results = graph.multiSearch(goals);
-		LinkedList<Stop> path = new LinkedList<Stop>();
-		for (int r : results) {
-			String stopName = getStopNameByID(r);
-			Stop s = getStopByName(stopName);
-			System.out.println(stopName);
-			path.add(s);
-		}
-		Color newColor = Color.white;
-		Views.drawPath(path, new Color(newColor.getRed(),newColor.getGreen(),newColor.getBlue(),100));
-	}
+	
 	// Sets up timer to update trains every 10 seconds
 	// CM and AG and NF
 	private static void createUpdateTask() {
@@ -169,8 +155,6 @@ public abstract class TripPlanner {
 					TripPlanner.update();
 					view.setLines(liveLines);
 				}
-				//else
-				//	this.cancel();
 			}
 		}
 		TimerTask updateTask = new Updater();
