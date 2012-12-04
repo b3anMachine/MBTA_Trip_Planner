@@ -90,8 +90,69 @@ public class TrainGraph {
 		return pathList;
 	}
 	
-	// Unordered list search
+	// Unordered Search using permutations
 	//  CM
+	public Stack<Integer> unorderedPermSearch(LinkedList<Integer> goals) {
+		LinkedList<LinkedList<Integer>> permutations = new LinkedList<LinkedList<Integer>>();
+		LinkedList<Stack<Integer>> routes = new LinkedList<Stack<Integer>>();
+		
+		// generate all possible permutations of goals and add them to permutations
+		
+		permutations = getPermutations(goals);
+		
+		// Uses multisearch to calculate a route for each permutation
+		for (int p = 0; p < permutations.size(); p++) {
+			Stack<Integer> route = multiSearch(permutations.get(p));
+			routes.add(route);
+		}
+		
+		// get the smallest route
+		//System.out.println(getSmallest(routes));
+		return getSmallest(routes);
+	}
+	
+	//  get all the permutations
+	//  DO NOT USE WITH MORE THAN 7 or 8 ENTRIES. WILL TAKE FOREVER.
+	//  CM
+	public LinkedList<LinkedList<Integer>> getPermutations (LinkedList<Integer> goals) {
+		
+		if(goals.size()==1){
+            LinkedList<Integer> perm = new LinkedList<Integer>();
+            perm.add(goals.get(0));
+            LinkedList<LinkedList<Integer>> listOfList = new LinkedList<LinkedList<Integer>>();
+            listOfList.add(perm);
+            return listOfList;
+        }
+		
+		LinkedList<LinkedList<Integer>> listOfLists = new LinkedList<LinkedList<Integer>>();
+		LinkedList<Integer> remaining = new LinkedList<Integer>(goals);
+		
+		for (int g = 0; g < goals.size(); g++) {
+			LinkedList<Integer> perm = new LinkedList<Integer>();
+			perm.add(goals.get(g));
+			
+			LinkedList<Integer> coppied = new LinkedList<Integer>();
+			coppied.addAll(remaining);
+			coppied.remove(g);
+			
+			LinkedList<LinkedList<Integer>> permute = getPermutations(coppied);
+			
+			Iterator<LinkedList<Integer>> iterator = permute.iterator();
+            while (iterator.hasNext()) {
+                LinkedList<Integer> list = iterator.next();
+                list.add(goals.get(g));
+                listOfLists.add(list);
+            }
+		}
+		//System.out.println("Size = "+ listOfLists.size() + ", ListOfLists: " + listOfLists);
+		return listOfLists;
+	}
+	
+	
+	// Unordered list search
+	// Search that sorts the IDs, then finds the route. Not using.
+	//  CM
+	/*
 	public  Stack<Integer> unorderedSearch(LinkedList<Integer> goals) {
 		//List to store possible routes
 		LinkedList<Integer> remainingGoals = goals;
@@ -106,7 +167,7 @@ public class TrainGraph {
 		
 		return getSmallest(possibilities);
 				
-		}
+		}*/
 	
 	// Get the smallest stack of stops for the route
 	//  CM
