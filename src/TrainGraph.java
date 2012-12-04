@@ -50,7 +50,7 @@ public class TrainGraph {
 		results.pop();
 		return false; 
 	}
-
+	
 	// Depth First Search
 	// AG
 	public Stack<Integer> multiSearch(LinkedList<Integer> goals) {
@@ -68,28 +68,55 @@ public class TrainGraph {
 		return results; 
 	}
 	
+	//Returns a LinkedList<Integer> that is a path from the first transfer found, to the destination
+	//NF
+	public static LinkedList<Integer> findTransfer(LinkedList<Integer> pathList){
+		if(pathList.isEmpty()){
+			return pathList;
+		}
+		String originLine = TripPlanner.getStopByID(pathList.get(0)).Line;
+		for(int id=0;id<pathList.size();id++){
+			String curLine = TripPlanner.getStopByID(pathList.get(id)).Line;;
+			if(!curLine.equals(originLine)){
+				LinkedList<Integer> newList = new LinkedList<Integer>();
+				
+				newList.addAll(pathList.subList(id, pathList.size()-1));
+				
+				return newList;
+			}
+		}
+		return pathList;
+	}
+	
 	// Unordered list search
 	//  CM
 	public  Stack<Integer> unorderedSearch(LinkedList<Integer> goals) {
 		//List to store possible routes
 		LinkedList<Integer> remainingGoals = goals;
 		Collections.sort(remainingGoals);
-		return multiSearch(remainingGoals);
+		LinkedList<Stack<Integer>> possibilities = new LinkedList<Stack<Integer>>();
 		
-		//LinkedList<Stack<Integer>> possibilities = new LinkedList<Stack<Integer>>();
+		for (int g = 0; g < remainingGoals.size(); g++) {
+		remainingGoals.addFirst(remainingGoals.get(g));
+		remainingGoals.remove(g+1);
+		possibilities.add(multiSearch(remainingGoals));
+		}
 		
-		/*
-		// Calculate the possible routes
-		for (int p = 0; p < remainingGoals.size(); p++) {
-			LinkedList<Integer> stopPair = new LinkedList<Integer>();
-			stopPair.add(remainingGoals.get(p));
-			stopPair.add(remainingGoals.get(p+1));
-			Stack<Integer> tempResults = multiSearch(stopPair);
-			possibilities.add(tempResults);
-			remainingGoals.remove(p);
-		}*/
-			
+		return getSmallest(possibilities);
+				
 		}
 	
-	
+	// Get the smallest stack of stops for the route
+	//  CM
+	public Stack<Integer> getSmallest (LinkedList<Stack<Integer>> routes) {
+		Stack<Integer> smallest = routes.getFirst();
+		for (int r = 0; r < routes.size(); r++) {
+			Stack<Integer> route = routes.get(r);
+			if (route.size() < smallest.size()) {
+				smallest = route;
+			}
+		}
+		
+		return smallest;
+	}
 }

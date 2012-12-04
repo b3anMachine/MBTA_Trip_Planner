@@ -2,11 +2,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.TimerTask;
-import java.util.Timer;
+import java.util.*;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
@@ -323,5 +319,52 @@ public abstract class TripPlanner {
 				tempStop = s;
 		}
 		return tempStop;		
+	}
+	//gets Stop by ID
+	public static Stop getStopByID(int stopID){		
+		return getStopByName(getStopNameByID(stopID));
+	}
+	//Returns the train with the smallest time until arrival for the desired stop
+	//NF
+	public static Train getTrainAtStop(String stopName){
+		LinkedList<Train> curTrains = new LinkedList<Train>();
+		for (TrainLine line : liveLines) {			
+			LinkedList<Train> trains = line.getTrains();			
+			for (int t = 0; t < trains.size(); t++) {
+				Train curTrain = trains.get(t);
+				if(curTrain.containsStop(stopName)){
+					curTrains.add(curTrain);
+				}
+			}
+		}
+		return getEarliestTrain(curTrains, stopName);
+	}
+	//Compares 2 trains and returns true if o1 has a greater time than o2 
+	//for the first prediction
+	//NF
+    public static boolean compare(Train o1, Train o2, String stopName) {
+    	
+    	return o1.getPredictionByName(stopName).getTime() > o2.getPredictionByName(stopName).getTime();
+    }
+    //Consumes a LinkedList of Trains and returns the one with the smallest time
+    //for the first element in the list of predictions
+    //NF
+	public static Train getEarliestTrain(LinkedList<Train> trains, String stopName){
+		//for(int t=0;t<trains.size();t++){
+		if(trains.isEmpty()){
+			return null;
+		}
+		else if(trains.size() == 1){
+			return trains.get(0);
+		}
+		else if(compare(trains.get(0),trains.get(1),stopName)){
+			trains.remove(0);
+			return getEarliestTrain(trains,stopName);
+		}
+		else{
+			trains.remove(1);
+			return getEarliestTrain(trains,stopName);
+		}
+
 	}
 }
