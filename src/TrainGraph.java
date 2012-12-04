@@ -49,7 +49,7 @@ public class TrainGraph {
 		results.pop();
 		return false; 
 	}
-
+	
 	// Depth First Search
 	// AG
 	public Stack<Integer> multiSearch(LinkedList<Integer> goals) {
@@ -65,5 +65,25 @@ public class TrainGraph {
 
 		// No path was found
 		return results; 
+	}
+	
+	//Returns a LinkedList<Integer> that is a path from the first transfer found, to the destination
+	//NF
+	public static LinkedList<Integer> findTransfer(LinkedList<Integer> pathList){
+		if(pathList.isEmpty()){
+			return pathList;
+		}
+		String originLine = TripPlanner.getStopByID(pathList.get(0)).Line;
+		for(int id=0;id<pathList.size();id++){
+			String curLine = TripPlanner.getStopByID(pathList.get(id)).Line;;
+			if(!curLine.equals(originLine)){
+				LinkedList<Integer> newList = new LinkedList<Integer>();
+				
+				newList.addAll(pathList.subList(id, pathList.size()-1));
+				
+				return newList;
+			}
+		}
+		return pathList;
 	}
 }

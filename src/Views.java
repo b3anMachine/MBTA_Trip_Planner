@@ -24,6 +24,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	/**
 	 * Map declarations
 	 * **/
+	public static String[] instructions;
 	public static HashMap<String,Point> stopMap = new HashMap<String,Point>(70);
 	public static HashMap<Train,Point> trainMap = new HashMap<Train,Point>(70);
 	public static final String IMAGE_PATH = "mbta.bmp";
@@ -34,8 +35,8 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	static double scaleY = 1.0;
 	static AffineTransform trans;
 
-	public static final int MAX_TIME = 1300;
-	public static final int MIN_TIME = 15;
+	public static final int MAX_TIME = 800;
+	public static final int MIN_TIME = 30;
 
 	private static final int STOP_THRESHOLD = 15;
 	private static final int TRAIN_THRESHOLD = 10;
@@ -195,7 +196,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 					if ((x < posn.x + STOP_THRESHOLD) && (x > posn.x - STOP_THRESHOLD)
 							&& (y < posn.y + STOP_THRESHOLD) && (y > posn.y - STOP_THRESHOLD)){
-						t = "<html>"+s;
+						t = "<html>"+getNextTrain(s);
 
 						t += "</html>";
 						return t;
@@ -294,6 +295,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 					pathList.add(TripPlanner.getStopByName(s).stopID);
 				}
 				update();
+				//System.out.println(createInstructions(pathList, pathList.size()));
 			}
 		});
 
@@ -526,13 +528,14 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 		//add to right jframe
 		createTable(bottomMiddle);
+		right3.add(plannerButtons);
 		createStopsTable(right3);
 		right1.add(orderedList);
 
 		stopTableControls.add(addStop);
 		stopTableControls.add(selectStop);
 		stopTableControls.add(removeStop);
-		right3.add(plannerButtons);
+		
 		right4.add(calcRoute);
 		right5.add(earliestDep);
 		right5.add(fewestTrans);
@@ -789,7 +792,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	//linear interpolation between 2 floats and time
 	public static Float LinearInterpolate(Float y1,Float y2,Float mu)
 	{
-		return(y1*(1-mu)+y2*mu);
+		return(y2*(1-mu)+y1*mu);
 	}
 
 	/**
@@ -871,6 +874,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		int y = 0;	
 		int lastX = 0;
 		int lastY = 0;
+		
 		//int z = stopMap.get(getLastStop(getStopByName(position),getStopByName(destination))).x;
 
 		Stop next = TripPlanner.getStopByName(nextStop);
@@ -905,24 +909,45 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			x = lastX;
 			y = lastY;
 		}
+		/*
+		else if(timeLeft <= (MAX_TIME*2/3) || (nextX == 0 && nextY == 0)){
+			Point half = takeHalf(new Point(lastX,lastY), new Point(nextX,nextY));
+			Point quarter = takeHalf(half, new Point(nextX,nextY));
+			x = quarter.x;
+			y = quarter.y;
+		}
+		else if(timeLeft >= (MAX_TIME*2/3) || (nextX == 0 && nextY == 0)){
+			Point half = takeHalf(new Point(lastX,lastY), new Point(nextX,nextY));
+			Point quarter = takeHalf(new Point(lastX,lastY), half);
+			x = quarter.x;
+			y = quarter.y;
+		}
+		else if(timeLeft <= (MAX_TIME*2/3) && timeLeft >= (MAX_TIME*1/3)
+				|| (nextX == 0 && nextY == 0)){
+			x = takeHalf(new Point(lastX,lastY), new Point(nextX,nextY)).x;
+			y = takeHalf(new Point(lastX,lastY), new Point(nextX,nextY)).y;
+		}
+		*/
 		// Draw the train in between stops
 		else {
+			
 			float lerpTime = (float)timeLeft/MAX_TIME;
 			//System.out.println(lerpTime);
 			if(lerpTime >= 1.0f){ lerpTime = 1.0f;}
 			else if(lerpTime <= 0.0f){ lerpTime = 0.0f;}
 			x = (int)(LinearInterpolate((float)lastX, (float)nextX, lerpTime)*100)/100; //(float)timeLeft/MAX_TIME
-			System.out.println(t.getTrainID());
-			System.out.println("Last X: "+lastX);
-			System.out.println("Next X: "+nextX);
-			System.out.println("Last Y: "+lastY);
-			System.out.println("Next Y: "+nextY);
+			//System.out.println(t.getTrainID());
+			//System.out.println("Last X: "+lastX);
+			//System.out.println("Next X: "+nextX);
+			//System.out.println("Last Y: "+lastY);
+			//System.out.println("Next Y: "+nextY);
 			//System.out.println("X: "+x);
 			//System.out.println("Y: "+y);
 			y = (int)(LinearInterpolate((float)lastY, (float)nextY, lerpTime)*100)/100; //(float)timeLeft/MAX_TIME			
-			//System.out.println((int)(LinearInterpolate(0f, (float)nextX, lerpTime)*100)/100);			
-			//x = (nextX+lastX)/2;
-			//y = (nextY+lastY)/2;
+			//System.out.println((int)(LinearInterpolate(0f, (float)nextX, lerpTime)*100)/100);		
+			
+		//	x = takeHalf(new Point(lastX,lastY), new Point(nextX,nextY)).x;
+		//	y = takeHalf(new Point(lastX,lastY), new Point(nextX,nextY)).y;
 		}
 
 		if(last.stopID < next.stopID){
@@ -941,11 +966,18 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			g.fillOval(x+3, y-6, 11, 11);
 		}
 
-
+		
 
 		trainMap.put(t,new Point(x,y));
 		g.dispose();
 		imageLabel.repaint();
+	}
+	public static Point takeHalf(Point last, Point next){
+		Point half = new Point();
+		half.x = (next.x+last.x)/2;
+		half.y = (next.y+last.y)/2;
+		return half;
+		
 	}
 	public static void pushHash(){
 		stopMap.put("OAK GROVE",new Point(799,77));
@@ -954,8 +986,6 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		stopMap.put("SULLIVAN",new Point(799,298));
 		stopMap.put("COMMUNITY COLLEGE",new Point(801,377));
 		stopMap.put("NORTH STATION",new Point(813,471));
-
-
 		stopMap.put("CHINATOWN",new Point(734,821));
 		stopMap.put("TUFTS MEDICAL CENTER",new Point(680,876));
 		stopMap.put("BACK BAY",new Point(617,939));
@@ -967,7 +997,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		stopMap.put("GREEN STREET",new Point(291,1264));
 		stopMap.put("FOREST HILLS",new Point(239,1315));
 		stopMap.put("DOWNTOWN CROSSING",new Point(798,761));
-		stopMap.put("STATE",new Point(870,681));
+		stopMap.put("STATE STREET",new Point(870,681));
 		stopMap.put("HAYMARKET",new Point(867,561));
 		stopMap.put("ALEWIFE",new Point(165,321));
 		stopMap.put("DAVIS",new Point(253,321));
@@ -1002,7 +1032,37 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		stopMap.put("SHAWMUT",new Point(799,1282));
 		stopMap.put("ASHMONT",new Point(799,1342));
 	}
+	public static String createInstructions(LinkedList<Integer> path, int size){
+			if(path.isEmpty()){
+				return "";
+			}
+			else{
+				String firstStop = TripPlanner.getStopNameByID(path.get(0));
+				String lastStop = TripPlanner.getStopNameByID(path.getLast());
+				Train nearestTrain = TripPlanner.getTrainAtStop(firstStop);
+				if(nearestTrain == null){
+					return createInstructions(TrainGraph.findTransfer(path), size);
+				}
+				else{
+					return (size-path.size()) + ") Switch Lines at " + firstStop + ", and get on a train in " + 
+					nearestTrain.getPredictionByName(firstStop).getTime() + " seconds going to" +
+					lastStop + 
+					createInstructions(TrainGraph.findTransfer(path), size);
+				}
+			}
+		
+	}
+	public String getNextTrain(String stopName){
+		Train nearestTrain = TripPlanner.getTrainAtStop(stopName);
+		if(!(nearestTrain == null)){
+			return "Train will be at here in " + nearestTrain.getPredictionByName(stopName).getTime() + " seconds.";
+		}
+		else{
+			return "There is no approaching train for this stop.";
+		}
+		//return "Train will be at here in " + nearestTrain.getPredictionByName(stopName).getTime() + " seconds.";
 
+	}
 	/**
 	 * Takes in a line name and returns the corresponding color
 	 * @author AG
@@ -1065,6 +1125,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	public void mouseClicked(MouseEvent e) {
 		int button = e.getButton();		
 		if (button == MouseEvent.BUTTON1) {
+			
 			//Graphics2D g = (Graphics2D)map.getGraphics();
 
 			/*
@@ -1113,67 +1174,6 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 	@Override
 	public void mouseMoved(MouseEvent e) {
-		/*
-		update();
-		Graphics2D g = (Graphics2D)map.getGraphics();
-		int x = e.getX();
-		int y = e.getY();
-
-		for(Train s : trainMap.keySet()){
-			Point posn = trainMap.get(s);
-			System.out.println(s.getTrainID());
-			if((x<posn.x+15) && (x>posn.x-15) && (y<posn.y+15) && (y>posn.y-15)){
-				//update();
-				//System.out.println("asf");
-				g.setColor(Color.darkGray);
-				g.fillRect(posn.x+15, posn.y-15, 230, 70);
-				g.setColor(Color.LIGHT_GRAY);
-				g.fillRect(posn.x+20, posn.y-20, 230, 70);
-				g.setColor(Color.black);
-				LinkedList<Integer> goals = new LinkedList<Integer>();
-
-				for(Prediction p : s.getTrainPredictions()){
-					//System.out.println(p.getID());
-					goals.add(TripPlanner.getStopByName(p.getName()).stopID);
-				}
-
-				//drawLineFromPoint(posn, stopMap.get(s.getTrainPredictions().get(0).getName()), Color.pink);
-				String predictions = "Schedule:";
-				//TripPlanner.drawTrainPath(goals);
-				g.drawBytes(predictions.getBytes(),0,predictions.length(),posn.x+30,posn.y-5);
-				g.drawBytes(s.getTrainPredictions().get(0).getName().getBytes(),0,s.getTrainPredictions().get(0).getName().length(),posn.x+30,posn.y+10);
-				g.drawBytes(s.getTrainPredictions().get(1).getName().getBytes(),0,s.getTrainPredictions().get(1).getName().length(),posn.x+30,posn.y+25);
-				g.drawBytes(s.getTrainPredictions().get(2).getName().getBytes(),0,s.getTrainPredictions().get(2).getName().length(),posn.x+30,posn.y+40);
-
-				String secondsLeft1 = s.getTrainPredictions().get(0).getTime().toString() + " Seconds Left";
-				String secondsLeft2 = s.getTrainPredictions().get(1).getTime().toString() + " Seconds Left";
-				String secondsLeft3 = s.getTrainPredictions().get(2).getTime().toString() + " Seconds Left";
-
-				g.drawBytes(secondsLeft1.getBytes(),0,secondsLeft1.length(),posn.x+150,posn.y+10);
-				g.drawBytes(secondsLeft2.getBytes(),0,secondsLeft2.length(),posn.x+150,posn.y+25);
-				g.drawBytes(secondsLeft3.getBytes(),0,secondsLeft3.length(),posn.x+150,posn.y+40);
-
-				g.dispose();	    	
-				imageLabel.repaint();
-
-			}
-
-		}
-
-		for(String s : stopMap.keySet()){
-			Point posn = stopMap.get(s);
-
-			if((x<posn.x+15) && (x>posn.x-15) && (y<posn.y+15) && (y>posn.y-15)){
-				//update();
-				//System.out.println("asf");
-				g.setColor(Color.LIGHT_GRAY);
-				g.fillRect(posn.x+20, posn.y-20, 100, 20);
-				g.setColor(Color.black);
-				g.drawBytes(s.getBytes(),0,s.getBytes().length,posn.x+30,posn.y-5);
-				g.dispose();	    	
-				imageLabel.repaint();
-			}
-		}*/
 
 	}
 

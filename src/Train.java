@@ -65,4 +65,28 @@ public class Train {
 	public List<Prediction> getTrainPredictions() {
 		return predictions;
 	}
+	public boolean checkName(String predName, String stopName){
+		if(stopName.equals(stopName.toUpperCase())){
+			return predName.toUpperCase().equals(stopName);
+		}
+		else{
+			return predName.equals(stopName);
+		}
+	}
+	public Prediction getPredictionByName(String stopName){
+		Prediction prediction = null;
+		for(Prediction p : predictions){
+			if(checkName(p.getName(),stopName)){
+				prediction =  p;
+			}
+		}
+		return prediction;
+	}
+	public boolean containsStop(String stopName){
+		boolean contains = false;
+		for(Prediction p : predictions){
+			contains = contains || checkName(p.getName(),stopName);
+		}
+		return contains;
+	}
 }
