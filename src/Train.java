@@ -66,12 +66,7 @@ public class Train {
 		return predictions;
 	}
 	public boolean checkName(String predName, String stopName){
-		if(stopName.equals(stopName.toUpperCase())){
-			return predName.toUpperCase().equals(stopName);
-		}
-		else{
-			return predName.equals(stopName);
-		}
+		return predName.equals(stopName);
 	}
 	public Prediction getPredictionByName(String stopName){
 		Prediction prediction = null;
