@@ -1,6 +1,7 @@
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Stack;
+import java.util.*;
 
 /**
  * 
@@ -85,5 +86,37 @@ public class TrainGraph {
 			}
 		}
 		return pathList;
+	}
+	
+	// Unordered list search
+	//  CM
+	public  Stack<Integer> unorderedSearch(LinkedList<Integer> goals) {
+		//List to store possible routes
+		LinkedList<Integer> remainingGoals = goals;
+		Collections.sort(remainingGoals);
+		LinkedList<Stack<Integer>> possibilities = new LinkedList<Stack<Integer>>();
+		
+		for (int g = 0; g < remainingGoals.size(); g++) {
+		remainingGoals.addFirst(remainingGoals.get(g));
+		remainingGoals.remove(g+1);
+		possibilities.add(multiSearch(remainingGoals));
+		}
+		
+		return getSmallest(possibilities);
+				
+		}
+	
+	// Get the smallest stack of stops for the route
+	//  CM
+	public Stack<Integer> getSmallest (LinkedList<Stack<Integer>> routes) {
+		Stack<Integer> smallest = routes.getFirst();
+		for (int r = 0; r < routes.size(); r++) {
+			Stack<Integer> route = routes.get(r);
+			if (route.size() < smallest.size()) {
+				smallest = route;
+			}
+		}
+		
+		return smallest;
 	}
 }
