@@ -41,7 +41,7 @@ public abstract class TripPlanner {
 	// List of Stops
 	static LinkedList<Stop> stops = new LinkedList<Stop>();
 
-	/** 
+	/**
 	 * Constants for JSON URLs
 	 * **/
 	// Orange line live data URL
@@ -320,15 +320,17 @@ public abstract class TripPlanner {
 		}
 		return tempStop;		
 	}
+	
 	//gets Stop by ID
 	public static Stop getStopByID(int stopID){		
 		return getStopByName(getStopNameByID(stopID));
 	}
-	//Returns the train with the smallest time until arrival for the desired stop
+	
+	//Returns the train with the smallest time until arrival for the given stopname
 	//NF
 	public static Train getTrainAtStop(String stopName){
 		LinkedList<Train> curTrains = new LinkedList<Train>();
-		for (TrainLine line : liveLines) {			
+		for (TrainLine line : (liveData ? liveLines : testLines)) {			
 			LinkedList<Train> trains = line.getTrains();			
 			for (int t = 0; t < trains.size(); t++) {
 				Train curTrain = trains.get(t);
@@ -339,13 +341,14 @@ public abstract class TripPlanner {
 		}
 		return getEarliestTrain(curTrains, stopName);
 	}
-	//Compares 2 trains and returns true if o1 has a greater time than o2 
+	
+	//Compares 2 trains and returns true if o1 has a greater time than o2
 	//for the first prediction
 	//NF
     public static boolean compare(Train o1, Train o2, String stopName) {
-    	
     	return o1.getPredictionByName(stopName).getTime() > o2.getPredictionByName(stopName).getTime();
     }
+    
     //Consumes a LinkedList of Trains and returns the one with the smallest time
     //for the first element in the list of predictions
     //NF

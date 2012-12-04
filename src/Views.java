@@ -1,9 +1,6 @@
 import java.awt.*;
 import javax.swing.*; 
 import java.io.File;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
-import java.awt.dnd.DragSource;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -15,9 +12,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
-
-import javax.activation.ActivationDataFlavor;
-import javax.activation.DataHandler;
 import javax.imageio.ImageIO;
 import javax.swing.event.*;
 import javax.swing.table.*;
@@ -29,7 +23,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	/**
 	 * Map declarations
 	 * **/
-	public static String[] instructions;
+	public static LinkedList<String> instructions = new LinkedList<String>();
 	public static HashMap<String,Point> stopMap = new HashMap<String,Point>(70);
 	public static HashMap<Train,Point> trainMap = new HashMap<Train,Point>(70);
 	public static final String IMAGE_PATH = "mbta.bmp";
@@ -170,9 +164,6 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		 * **/
 		// The label that holds the map
 		imageLabel = new JLabel() {
-			/**
-			 * 
-			 */
 			private static final long serialVersionUID = -5687904822158992635L;
 
 			// Custom tool tip handler
@@ -193,19 +184,21 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 							goals.add(TripPlanner.getStopByName(p.getName()).stopID);
 						}
 
-						//drawLineFromPoint(posn, stopMap.get(s.getTrainPredictions().get(0).getName()), Color.pink);
-						//drawTrainPath(goals);
+						drawLineFromPoint(posn, 
+								stopMap.get(TripPlanner.getStopNameByID(goals.get(0)).toUpperCase()),
+								new Color(255, 255, 0, 200));
+						drawTrainPath(goals, new Color(255, 255, 0, 200));
 
-						t = "<html>Schedule:";
+						t = "<html><font style='font-size:20;'>";
 						t += "<br>"+s.getTrainID();
 
 						boolean addMorePreds = true;
 						int numPreds = 0;
 						while (addMorePreds) {
 							List<Prediction> preds = s.getTrainPredictions();
-							if (numPreds <= 2 && preds.size()-1 >= numPreds) {
-								t += "<br>"+s.getTrainPredictions().get(numPreds).getName() + ": "
-										+ s.getTrainPredictions().get(numPreds).getTime().toString() + " Seconds Left";
+							if (numPreds <= 5 && preds.size()-1 >= numPreds) {
+								t += "<br>Arriving at "+s.getTrainPredictions().get(numPreds).getName() + " in "
+										+ s.getTrainPredictions().get(numPreds).getTime().toString() + " seconds";
 								numPreds++;
 							}
 							else {
@@ -213,7 +206,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 							}
 						}
 
-						t += "</html>";
+						t += "</font></html>";
 						return t;
 					}
 				}
@@ -222,11 +215,21 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 				for(String s : stopMap.keySet()){
 					Point posn = stopMap.get(s);
 
+					Train nextTrain = TripPlanner.getTrainAtStop(s);//getNextTrain(s);
+
 					if ((x < posn.x + STOP_THRESHOLD) && (x > posn.x - STOP_THRESHOLD)
 							&& (y < posn.y + STOP_THRESHOLD) && (y > posn.y - STOP_THRESHOLD)){
-						t = "<html>"+getNextTrain(s);
+						t = "<html><font style='font-size:20;'>"+getNextTrain(s);
 
-						t += "</html>";
+						if (nextTrain != null) {
+							Point trainPosn = trainMap.get(nextTrain);
+							Graphics2D g = (Graphics2D) map.getGraphics();
+							g.setStroke(new BasicStroke(5f));
+							g.setColor(new Color(0,190,190));
+							g.drawOval(trainPosn.x+CIRCLE_DIFF-2, trainPosn.y+CIRCLE_DIFF-2, 20, 20);
+						}
+
+						t += "</font></html>";
 						return t;
 					}
 				}
@@ -235,8 +238,9 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		};
 		imageLabel.addMouseListener(this);
 		imageLabel.addMouseMotionListener(this);
-		imageLabel.setToolTipText("Nothing");
+		imageLabel.setToolTipText("");
 		ToolTipManager.sharedInstance().registerComponent(imageLabel);
+		ToolTipManager.sharedInstance().setDismissDelay(10000);
 		ToolTipManager.sharedInstance().setInitialDelay(0);
 
 		JLabel depLabel = new JLabel("Departure Time");
@@ -292,6 +296,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 					testSystem.setText("Use Test Data");
 				else
 					testSystem.setText("Use Live Data");
+				update();
 			}
 		});
 
@@ -334,7 +339,12 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 				}
 				currentViewState = ViewState.VIEW_ROUTE;
 				update();
-				//System.out.println(createInstructions(pathList, pathList.size()));
+				LinkedList<String> bs = new LinkedList<String>();
+				createInstructions(pathList, pathList.size(), bs);
+				for (String s : bs)
+					System.out.println(s);
+				instructions.clear();
+				instructions.addAll(bs);
 			}
 		});
 
@@ -777,7 +787,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			// Iterate through stops
 			for (Stop s : stops) {
 				// Create row to hold stop info
-				Object[] row = { s.stop_name };
+				Object[] row = { s.stop_name, getNextTrain(s.stop_name) };
 				rowColors.add(lineToColor(s.Line));
 				// Add row to data array
 				data[stops.indexOf(s)] = row;
@@ -793,7 +803,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 			for (int s = 0; s < selectedStops.size(); s++) {
 				String stopName = selectedStops.get(s);
-				Object[] row = { stopName, "" };
+				Object[] row = { stopName, (instructions.contains(s) ? instructions.get(s) : "") };
 				data[s] = row;
 				rowColors.add(lineToColor(TripPlanner.getStopByName(stopName).Line));
 			}
@@ -813,7 +823,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	private static void updateMap() {
 		Graphics2D g = (Graphics2D)map.getGraphics();
 		createMap();
-		drawTrainPath(pathList);
+		drawTrainPath(pathList, PATH_COLOR);
 		trainMap.clear();
 
 		/*
@@ -872,20 +882,6 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 				}
 			}
 		}
-		else {
-			if(nextStop.stopID < dest.stopID){
-				String temp2 =  TripPlanner.getStopNameByID(nextStop.stopID + 1);
-				if(stops.contains(TripPlanner.getStopByName(tempString))){
-					tempString = temp2;
-				}
-			}
-			if(nextStop.stopID > dest.stopID){
-				String temp2 = TripPlanner.getStopNameByID(nextStop.stopID - 1);
-				if(stops.contains(TripPlanner.getStopByName(tempString))){
-					tempString = temp2;
-				}
-			}
-		}
 
 		return tempString;
 
@@ -916,7 +912,6 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		stopsTable = new JTable(stopsTableModel);
 		stopsTable.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY, 1));
 		stopsTable.setShowVerticalLines(true);
-
 		stopsTable.setDragEnabled(true);
 		stopsTable.setDropMode(DropMode.INSERT_ROWS);
 		stopsTable.setTransferHandler(new TableRowTransferHandler(stopsTable));
@@ -974,7 +969,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		int y = 0;	
 		int lastX = 0;
 		int lastY = 0;
-		
+
 		//int z = stopMap.get(getLastStop(getStopByName(position),getStopByName(destination))).x;
 
 		Stop next = TripPlanner.getStopByName(nextStop);
@@ -1009,28 +1004,9 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			x = lastX;
 			y = lastY;
 		}
-		/*
-		else if(timeLeft <= (MAX_TIME*2/3) || (nextX == 0 && nextY == 0)){
-			Point half = takeHalf(new Point(lastX,lastY), new Point(nextX,nextY));
-			Point quarter = takeHalf(half, new Point(nextX,nextY));
-			x = quarter.x;
-			y = quarter.y;
-		}
-		else if(timeLeft >= (MAX_TIME*2/3) || (nextX == 0 && nextY == 0)){
-			Point half = takeHalf(new Point(lastX,lastY), new Point(nextX,nextY));
-			Point quarter = takeHalf(new Point(lastX,lastY), half);
-			x = quarter.x;
-			y = quarter.y;
-		}
-		else if(timeLeft <= (MAX_TIME*2/3) && timeLeft >= (MAX_TIME*1/3)
-				|| (nextX == 0 && nextY == 0)){
-			x = takeHalf(new Point(lastX,lastY), new Point(nextX,nextY)).x;
-			y = takeHalf(new Point(lastX,lastY), new Point(nextX,nextY)).y;
-		}
-		*/
 		// Draw the train in between stops
 		else {
-			
+
 			float lerpTime = (float)timeLeft/MAX_TIME;
 			//System.out.println(lerpTime);
 			if(lerpTime >= 1.0f){ lerpTime = 1.0f;}
@@ -1045,9 +1021,9 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			//System.out.println("Y: "+y);
 			y = (int)(LinearInterpolate((float)lastY, (float)nextY, lerpTime)*100)/100; //(float)timeLeft/MAX_TIME			
 			//System.out.println((int)(LinearInterpolate(0f, (float)nextX, lerpTime)*100)/100);		
-			
-		//	x = takeHalf(new Point(lastX,lastY), new Point(nextX,nextY)).x;
-		//	y = takeHalf(new Point(lastX,lastY), new Point(nextX,nextY)).y;
+
+			//	x = takeHalf(new Point(lastX,lastY), new Point(nextX,nextY)).x;
+			//	y = takeHalf(new Point(lastX,lastY), new Point(nextX,nextY)).y;
 		}
 
 		if(last.stopID < next.stopID){
@@ -1058,9 +1034,8 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			g.fillOval(x+CIRCLE_DIFF, y+CIRCLE_DIFF, OUTER_CIRCLE_SIZE, OUTER_CIRCLE_SIZE);
 			g.setColor(SB_CIRCLE_COLOR);
 			g.fillOval(x, y, INNER_CIRCLE_SIZE, INNER_CIRCLE_SIZE);
-
 		}
-		if(last.stopID > next.stopID){
+		if(last.stopID >= next.stopID){
 			// NORTH BOUND
 			x += NB_X_OFFSET;
 			y += NB_Y_OFFSET;
@@ -1079,17 +1054,17 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		half.x = (next.x+last.x)/2;
 		half.y = (next.y+last.y)/2;
 		return half;
-		
+
 	}
 	public static void pushHash(){
 		stopMap.put("OAK GROVE",new Point(799,77));
-		stopMap.put("MALDEN",new Point(798,143));
+		stopMap.put("MALDEN CENTER",new Point(798,143));
 		stopMap.put("WELLINGTON",new Point(799,214));
 		stopMap.put("SULLIVAN",new Point(799,298));
 		stopMap.put("COMMUNITY COLLEGE",new Point(801,377));
 		stopMap.put("NORTH STATION",new Point(813,471));
 		stopMap.put("CHINATOWN",new Point(734,821));
-		stopMap.put("TUFTS MEDICAL CENTER",new Point(680,876));
+		stopMap.put("TUFTS MEDICAL",new Point(680,876));
 		stopMap.put("BACK BAY",new Point(617,939));
 		stopMap.put("MASS AVE",new Point(560,994));
 		stopMap.put("RUGGLES",new Point(504,1051));
@@ -1103,12 +1078,12 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		stopMap.put("HAYMARKET",new Point(867,561));
 		stopMap.put("ALEWIFE",new Point(165,321));
 		stopMap.put("DAVIS",new Point(253,321));
-		stopMap.put("PORTER",new Point(374,343));
-		stopMap.put("HARVARD",new Point(453,417));
+		stopMap.put("PORTER SQUARE",new Point(374,343));
+		stopMap.put("HARVARD SQUARE",new Point(453,417));
 		stopMap.put("CENTRAL SQUARE",new Point(521,487));
 		stopMap.put("KENDALL/MIT",new Point(600,565));
 		stopMap.put("CHARLES/MGH",new Point(672,638));
-		stopMap.put("PARK ST",new Point(728,691));
+		stopMap.put("PARK STREET",new Point(728,691));
 		stopMap.put("SOUTH STATION",new Point(882,846));
 		stopMap.put("BROADWAY",new Point(901,942));
 		stopMap.put("ANDREW",new Point(899,1021));
@@ -1134,36 +1109,67 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		stopMap.put("SHAWMUT",new Point(799,1282));
 		stopMap.put("ASHMONT",new Point(799,1342));
 	}
-	public static String createInstructions(LinkedList<Integer> path, int size){
-			if(path.isEmpty()){
-				return "";
+
+	public static void createInstructions(LinkedList<Integer> path, int size, LinkedList<String> instructions){
+		if (!path.isEmpty()) {
+			String firstStop = TripPlanner.getStopNameByID(path.get(0));
+			String lastStop = TripPlanner.getStopNameByID(path.getLast());
+			Train nearestTrain = TripPlanner.getTrainAtStop(firstStop);
+
+			int sec = 0;
+			int min = 0;
+
+			if (nearestTrain != null) {
+				sec = nearestTrain.getPredictionByName(firstStop).getTime();
+				min = sec/60;
+				sec %= 60;
 			}
-			else{
-				String firstStop = TripPlanner.getStopNameByID(path.get(0));
-				String lastStop = TripPlanner.getStopNameByID(path.getLast());
-				Train nearestTrain = TripPlanner.getTrainAtStop(firstStop);
-				if(nearestTrain == null){
-					return createInstructions(TrainGraph.findTransfer(path), size);
-				}
-				else{
-					return (size-path.size()) + ") Switch Lines at " + firstStop + ", and get on a train in " + 
-					nearestTrain.getPredictionByName(firstStop).getTime() + " seconds going to" +
-					lastStop + 
-					createInstructions(TrainGraph.findTransfer(path), size);
-				}
+
+			if(nearestTrain == null) {
+				System.out.println("Nearest train is null");
+				instructions.add("");
+				//createInstructions(TrainGraph.findTransfer(path), size, instructions);
 			}
-		
+			else if (path.size() == 1) {
+				instructions.add((size - path.size()+1) + ". Arrive at "
+						+ lastStop + " at " + min+":"+sec + ".");
+			}
+			else if (path.size() == size) {
+				instructions.add("1. Go to "+firstStop+" and take the train that arrives in "+
+						min+":"+sec+" to "+lastStop+".");
+				createInstructions(TrainGraph.findTransfer(path), size, instructions);
+			}
+			else {
+				instructions.add((size - path.size()+1) + ". Switch Lines at "
+						+ firstStop + " and get on a train in " + 
+						min+":"+sec + " going to " + lastStop);
+				createInstructions(TrainGraph.findTransfer(path), size, instructions);
+			}
+		}
 	}
-	public String getNextTrain(String stopName){
+
+	public static String getNextTrain(String stopName){
 		Train nearestTrain = TripPlanner.getTrainAtStop(stopName);
-		if(!(nearestTrain == null)){
-			return "Train will be at here in " + nearestTrain.getPredictionByName(stopName).getTime() + " seconds.";
+
+		if(nearestTrain != null) {
+			int sec = nearestTrain.getPredictionByName(stopName).getTime();
+			int min = sec/60;
+			sec %= 60;
+			String stopInfo = "";
+			if (min > 0)
+				stopInfo = "Train arrives in "+min+" minute(s) & "+sec+" second(s).";
+			else if (min == 0 && sec > 0)
+				stopInfo = "Train arrives in "+sec+" second(s).";
+			else if (min < 0)
+				stopInfo = "Train arrived "+-min+" minute(s) & "+-sec+" second(s) ago.";
+			else if (sec <= 0)
+				stopInfo = "Train arrived "+-sec+" second(s) ago.";
+			return stopInfo;
 		}
 		else{
-			return "There is no approaching train for this stop.";
+			return "There are no approaching trains.";
 		}
 		//return "Train will be at here in " + nearestTrain.getPredictionByName(stopName).getTime() + " seconds.";
-
 	}
 	/**
 	 * Takes in a line name and returns the corresponding color
@@ -1200,17 +1206,16 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		imageLabel.repaint();
 	}
 
-	public static void drawTrainPath(LinkedList<Integer> goals){
+	public static void drawTrainPath(LinkedList<Integer> goals, Color c){
 		Stack<Integer> results = new Stack<Integer>();
 		results = TripPlanner.graph.multiSearch(goals);
 		LinkedList<Stop> path = new LinkedList<Stop>();
 		for (int r : results) {
 			String stopName = TripPlanner.getStopNameByID(r);
 			Stop s = TripPlanner.getStopByName(stopName);
-			System.out.println(stopName);
 			path.add(s);
 		}
-		Views.drawPath(path, PATH_COLOR);
+		Views.drawPath(path, c);
 	}
 
 	public static void drawPath(LinkedList<Stop> path, Color color) {
@@ -1226,7 +1231,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	public void mouseClicked(MouseEvent e) {
 		int button = e.getButton();		
 		if (button == MouseEvent.BUTTON1) {
-			
+
 			//Graphics2D g = (Graphics2D)map.getGraphics();
 
 			/*
@@ -1238,12 +1243,10 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 				//stopMap.put(name, stop1);
 				//drawNode(stopMap.get("Downtown Crossing").x,stopMap.get("Downtown Crossing").y,g);
 				System.out.println("stopMap.put('"+name+"',new Point("+e.getX()+","+e.getY()+"));");
-			 */
-
 
 			System.out.println("button 1");
 			scaleX *= 1.5;
-			scaleY *= 1.5;			
+			scaleY *= 1.5;*/			
 		}
 
 		/*
@@ -1275,18 +1278,17 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 	@Override
 	public void mouseMoved(MouseEvent e) {
-
+		updateMap();
 	}
 
 	/**
 	 * Unimplemented required methods
 	 * **/
 	@Override
-	public void mouseEntered(MouseEvent e) {
-
+	public void mouseExited(MouseEvent arg0) {
 	}
 	@Override
-	public void mouseExited(MouseEvent arg0) {
+	public void mouseEntered(MouseEvent e) {
 	}
 	@Override
 	public void mouseReleased(MouseEvent arg0) {

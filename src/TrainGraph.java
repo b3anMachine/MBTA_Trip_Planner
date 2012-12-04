@@ -74,9 +74,10 @@ public class TrainGraph {
 		if(pathList.isEmpty()){
 			return pathList;
 		}
+		
 		String originLine = TripPlanner.getStopByID(pathList.get(0)).Line;
-		for(int id=0;id<pathList.size();id++){
-			String curLine = TripPlanner.getStopByID(pathList.get(id)).Line;;
+		for(int id = 0; id < pathList.size(); id++) {
+			String curLine = TripPlanner.getStopByID(pathList.get(id)).Line;
 			if(!curLine.equals(originLine)){
 				LinkedList<Integer> newList = new LinkedList<Integer>();
 				
@@ -85,6 +86,7 @@ public class TrainGraph {
 				return newList;
 			}
 		}
+		pathList.remove(0);
 		return pathList;
 	}
 	

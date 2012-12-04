@@ -85,7 +85,7 @@ public class Train {
 	public boolean containsStop(String stopName){
 		boolean contains = false;
 		for(Prediction p : predictions){
-			contains = contains || checkName(p.getName(),stopName);
+			contains = contains || checkName(p.getName(),stopName);// || checkName(destination, stopName);
 		}
 		return contains;
 	}
