@@ -89,7 +89,25 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	static Color TRAIN_COLOR = Color.green;
 	// Path color
 	static Color PATH_COLOR = new Color(255, 255, 255, 200);
-
+	// Orange Line Color
+	static Color ORANGE_LINE_COLOR = new Color(200,60,0);
+	// Red Line Color
+	static Color RED_LINE_COLOR = new Color(150,0,0);
+	// Blue Line Color
+	static Color BLUE_LINE_COLOR = new Color(6,6,80);
+	
+	// Values for drawing train circles
+	private static final int SB_X_OFFSET = -18;
+	private static final int SB_Y_OFFSET = -9;
+	private static final int NB_X_OFFSET = 3;
+	private static final int NB_Y_OFFSET = -9;
+	private static final int CIRCLE_DIFF = -3;
+	private static final Color CIRCLE_BACK_COLOR = Color.black;
+	private static final Color SB_CIRCLE_COLOR = new Color(220,50,220);
+	private static final Color NB_CIRCLE_COLOR = new Color(0,220,50);
+	private static final int INNER_CIRCLE_SIZE = 11;
+	private static final int OUTER_CIRCLE_SIZE = 15;
+	
 	/**
 	 * Sizes
 	 * **/
@@ -386,26 +404,27 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		//right.setLayout(new GridLayout(3,1,5,5));
 		right.setLayout(gridbag);
 
-		JInternalFrame plannerButtons = newFrame();
-		plannerButtons.setLayout(gridbag);
-		gridbag.setConstraints(plannerButtons, c);
+		JInternalFrame plannerControls = newFrame();
+		plannerControls.setLayout(gridbag);
+		gridbag.setConstraints(plannerControls, c);
 
 		//////////////////////////////////////
-		//set up layout for rightmost jframe
+		// Set up layout for RIGHT JFrame
+
 		JInternalFrame right1 = newFrame(0,FORE_COLOR);
 		right1.setMinimumSize(new Dimension(300,40));
 		right1.setLayout(new FlowLayout());
 		c.gridwidth = GridBagConstraints.REMAINDER; //end row
 		c.weightx = 0.3;
-		c.weighty = 0.0;
+		c.weighty = 0;
 		gridbag.setConstraints(right1, c);
-		right.add(right1);
+		//right.add(right1);
 
 		JInternalFrame stopTableControls = newFrame(0, new Color(200,200,200));
 		stopTableControls.setMinimumSize(new Dimension(300,40));
 		stopTableControls.setLayout(new GridLayout(1,3));
 		c.gridwidth = GridBagConstraints.REMAINDER; //end row
-		c.weightx = 0;
+		c.weightx = 0.3;
 		c.weighty = 0;
 		gridbag.setConstraints(stopTableControls, c);
 		right.add(stopTableControls);
@@ -425,7 +444,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		//c.weighty = 0;
 		c.gridwidth = GridBagConstraints.REMAINDER; //end row
 		gridbag.setConstraints(right4, c);
-		plannerButtons.add(right4);
+		plannerControls.add(right4);
 
 		JInternalFrame right5 = newFrame(0,new Color(200,200,200));
 		//right5.setMinimumSize(new Dimension(300,40));
@@ -433,7 +452,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		c.weighty = 1;
 		c.gridwidth = GridBagConstraints.REMAINDER; //end row
 		gridbag.setConstraints(right5, c);
-		plannerButtons.add(right5);
+		plannerControls.add(right5);
 
 		JInternalFrame right6 = newFrame(0,new Color(200,200,200));
 		//right6.setMinimumSize(new Dimension(300,60));
@@ -441,7 +460,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		c.weighty = 1;
 		c.gridwidth = GridBagConstraints.REMAINDER; //end row
 		gridbag.setConstraints(right6, c);
-		plannerButtons.add(right6);
+		plannerControls.add(right6);
 
 		JInternalFrame lastLeft = newFrame(0,new Color(220,220,220));
 		lastLeft.setLayout(new GridLayout(3,1,5,5));
@@ -453,6 +472,8 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		depFrame.setLayout(new GridLayout(1,2,5,5));
 		JInternalFrame arrFrame = newFrame(0,new Color(220,220,220));
 		arrFrame.setLayout(new GridLayout(1,2,5,5));
+
+		plannerControls.add(right1);
 		///////////////////////////////////////
 
 		//////////////////////////////////////
@@ -526,13 +547,13 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 		//add to right jframe
 		createTable(bottomMiddle);
+		right3.add(plannerControls);
 		createStopsTable(right3);
 		right1.add(orderedList);
 
 		stopTableControls.add(addStop);
 		stopTableControls.add(selectStop);
 		stopTableControls.add(removeStop);
-		right3.add(plannerButtons);
 		right4.add(calcRoute);
 		right5.add(earliestDep);
 		right5.add(fewestTrans);
@@ -633,9 +654,9 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 				try {
 					//if (column == 0) {
-						c.setBackground(rowColors.get(row));
-						// Change font color
-						c.setForeground(Color.white);
+					c.setBackground(rowColors.get(row));
+					// Change font color
+					c.setForeground(Color.white);
 					/*}
 					else {
 						c.setBackground(Color.white);
@@ -643,11 +664,11 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 					}*/
 				}
 				catch (IndexOutOfBoundsException e) {}
-				
+
 				return c;
 			}
 		};
-		
+
 		table.setDefaultRenderer(Object.class, cellRenderer);
 		cellRenderer.setHorizontalAlignment(SwingConstants.CENTER);
 		table.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY, 1));
@@ -677,55 +698,55 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		trans.scale(scaleX, scaleY);
 		g.setTransform(trans);*/
 
+		// Number of trains
+		int numTrains = 0;
+		// Get the total number of trains
+		for (TrainLine l : trainLines) {
+			numTrains += l.getTrains().size();
+		}
+
 		// If the trains should be shown
 		if (showTrains) {
-			// Number of trains
-			int numTrains = 0;
-			// Get the total number of trains
-			for (TrainLine l : trainLines) {
-				numTrains += l.getTrains().size();
-			}
-
 			// initialize length of data array
 			data = new Object[numTrains][];
+		}
 
-			// Counter for rows in data array
-			int counter = 0;
-			// iterate through lines
-			for (TrainLine line : trainLines) {
-				String lineName = line.getLine();
+		// Counter for rows in data array
+		int counter = 0;
+		// iterate through lines
+		for (TrainLine line : trainLines) {
+			String lineName = line.getLine();
 
-				// Get list of trains for each line
-				LinkedList<Train> trains = line.getTrains();
-				for (int t = 0; t < trains.size(); t++) {
-					Train train = trains.get(t);
+			// Get list of trains for each line
+			LinkedList<Train> trains = line.getTrains();
+			for (int t = 0; t < trains.size(); t++) {
+				Train train = trains.get(t);
+				String nextString = train.getTrainPredictions().get(0).getName();
+				int timeLeft = train.getTrainPredictions().get(0).getTime();
+				String destString = train.getTrainDestination();
+				if (showTrains) {
 					Object[] row = new Object[3];
-					String nextString = train.getTrainPredictions().get(0).getName();
-					int timeLeft = train.getTrainPredictions().get(0).getTime();
-					String destString = train.getTrainDestination();
 					row[0] = nextString;
 					row[1] = timeLeft;
 					row[2] = train.getTrainDestination();
+
 					rowColors.add(lineToColor(lineName));
 
-					// Draw trains on map
-					if(stopMap.containsKey(nextString.toUpperCase()) 
-							&& stopMap.containsKey(destString.toUpperCase())
-							&& !nextString.equals(destString)) {
-						createTrain(train);
-					}
-
 					// Add trains to data array for table
-					if (showTrains) {
-						data[counter] = row;
-						counter++;
-					}
+					data[counter] = row;
+					counter++;
+				}
+
+				// Draw trains on map
+				if(stopMap.containsKey(nextString.toUpperCase()) 
+						&& stopMap.containsKey(destString.toUpperCase())
+						&& !nextString.equals(destString)) {
+					createTrain(train);
 				}
 			}
 		}
 
-		// If the stops should be shown
-		else {
+		if (!showTrains) {
 			// Set data array to size of the stops list
 			data = new Object[stops.size()][];
 			// Iterate through stops
@@ -789,7 +810,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	//linear interpolation between 2 floats and time
 	public static Float LinearInterpolate(Float y1,Float y2,Float mu)
 	{
-		return(y1*(1-mu)+y2*mu);
+		return(y2*(1-mu)+y1*mu);
 	}
 
 	/**
@@ -912,11 +933,11 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			if(lerpTime >= 1.0f){ lerpTime = 1.0f;}
 			else if(lerpTime <= 0.0f){ lerpTime = 0.0f;}
 			x = (int)(LinearInterpolate((float)lastX, (float)nextX, lerpTime)*100)/100; //(float)timeLeft/MAX_TIME
-			System.out.println(t.getTrainID());
+			/*System.out.println(t.getTrainID());
 			System.out.println("Last X: "+lastX);
 			System.out.println("Next X: "+nextX);
 			System.out.println("Last Y: "+lastY);
-			System.out.println("Next Y: "+nextY);
+			System.out.println("Next Y: "+nextY);*/
 			//System.out.println("X: "+x);
 			//System.out.println("Y: "+y);
 			y = (int)(LinearInterpolate((float)lastY, (float)nextY, lerpTime)*100)/100; //(float)timeLeft/MAX_TIME			
@@ -926,22 +947,24 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		}
 
 		if(last.stopID < next.stopID){
-			g.setColor(Color.black);
-			// SOUTH --purple
-			g.fillOval(x-18, y-9, 15, 15);
-			g.setColor(new Color(220,50,220));
-			g.fillOval(x-15, y-6, 11, 11);
+			// SOUTH BOUND
+			x += SB_X_OFFSET;
+			y += SB_Y_OFFSET;
+			g.setColor(CIRCLE_BACK_COLOR);
+			g.fillOval(x+CIRCLE_DIFF, y+CIRCLE_DIFF, OUTER_CIRCLE_SIZE, OUTER_CIRCLE_SIZE);
+			g.setColor(SB_CIRCLE_COLOR);
+			g.fillOval(x, y, INNER_CIRCLE_SIZE, INNER_CIRCLE_SIZE);
 
 		}
 		if(last.stopID > next.stopID){
-			g.setColor(Color.black);
-			// NORTH --green
-			g.fillOval(x, y-9, 15, 15);
-			g.setColor(new Color(0,220,50));
-			g.fillOval(x+3, y-6, 11, 11);
+			// NORTH BOUND
+			x += NB_X_OFFSET;
+			y += NB_Y_OFFSET;
+			g.setColor(CIRCLE_BACK_COLOR);
+			g.fillOval(x+CIRCLE_DIFF, y+CIRCLE_DIFF, OUTER_CIRCLE_SIZE, OUTER_CIRCLE_SIZE);
+			g.setColor(NB_CIRCLE_COLOR);
+			g.fillOval(x, y, INNER_CIRCLE_SIZE, INNER_CIRCLE_SIZE);
 		}
-
-
 
 		trainMap.put(t,new Point(x,y));
 		g.dispose();
@@ -1009,14 +1032,13 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	 * **/
 	private static Color lineToColor(String line) {
 		if (line.equals("Orange")) {
-			return new Color(255,100,0);
+			return ORANGE_LINE_COLOR;
 		}
 		else if (line.equals("Red")) {
-			return Color.red;
-
+			return RED_LINE_COLOR;
 		}
 		else if (line.equals("Blue")) {
-			return Color.blue;
+			return BLUE_LINE_COLOR;
 		}
 		return Color.white;
 	}
