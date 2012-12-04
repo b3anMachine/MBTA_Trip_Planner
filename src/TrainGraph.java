@@ -74,22 +74,29 @@ public class TrainGraph {
 		//List to store possible routes
 		LinkedList<Integer> remainingGoals = goals;
 		Collections.sort(remainingGoals);
-		return multiSearch(remainingGoals);
+		LinkedList<Stack<Integer>> possibilities = new LinkedList<Stack<Integer>>();
 		
-		//LinkedList<Stack<Integer>> possibilities = new LinkedList<Stack<Integer>>();
+		for (int g = 0; g < remainingGoals.size(); g++) {
+		remainingGoals.addFirst(remainingGoals.get(g));
+		remainingGoals.remove(g+1);
+		possibilities.add(multiSearch(remainingGoals));
+		}
 		
-		/*
-		// Calculate the possible routes
-		for (int p = 0; p < remainingGoals.size(); p++) {
-			LinkedList<Integer> stopPair = new LinkedList<Integer>();
-			stopPair.add(remainingGoals.get(p));
-			stopPair.add(remainingGoals.get(p+1));
-			Stack<Integer> tempResults = multiSearch(stopPair);
-			possibilities.add(tempResults);
-			remainingGoals.remove(p);
-		}*/
-			
+		return getSmallest(possibilities);
+				
 		}
 	
-	
+	// Get the smallest stack of stops for the route
+	//  CM
+	public Stack<Integer> getSmallest (LinkedList<Stack<Integer>> routes) {
+		Stack<Integer> smallest = routes.getFirst();
+		for (int r = 0; r < routes.size(); r++) {
+			Stack<Integer> route = routes.get(r);
+			if (route.size() < smallest.size()) {
+				smallest = route;
+			}
+		}
+		
+		return smallest;
+	}
 }
