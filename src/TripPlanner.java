@@ -120,9 +120,9 @@ public abstract class TripPlanner {
 		testOrange = updateLine(TEST_ORANGE, orange);
 		testRed = updateLine(TEST_RED, red);
 		testBlue = updateLine(TEST_BLUE, blue);
-		testLines.add(testOrange);
 		testLines.add(testRed);
 		testLines.add(testBlue);
+		testLines.add(testOrange);
 
 		// Sets default to use live data instead of  test data
 		liveData = true;
@@ -167,9 +167,9 @@ public abstract class TripPlanner {
 		red = updateLine(RED_URL, red);
 		blue = updateLine(BLUE_URL, blue);
 		liveLines.clear();
-		liveLines.add(orange);
 		liveLines.add(red);
 		liveLines.add(blue);
+		liveLines.add(orange);
 	}
 
 	// Switches between live and test data

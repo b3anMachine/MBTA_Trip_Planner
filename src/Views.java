@@ -1,6 +1,9 @@
 import java.awt.*;
 import javax.swing.*; 
 import java.io.File;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.dnd.DragSource;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -13,6 +16,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
 
+import javax.activation.ActivationDataFlavor;
+import javax.activation.DataHandler;
 import javax.imageio.ImageIO;
 import javax.swing.event.*;
 import javax.swing.table.*;
@@ -58,22 +63,24 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	static LinkedList<Color> rowColors = new LinkedList<Color>();
 	// Stops table data
 	static Object[][] stopsData;
-	// Column names for the list of trains
+	// Column names for the VIEW_TRAINS state
 	private static String[] trainColumns = {"Next Stop", "Time To Next Stop", "Destination"};
-	// Column names for the list of stops
-	private static String[] stopColumns = {"Name"};
-	//
+	// Column names for the VIEW_STOPS state
+	private static String[] stopColumns = {"Name", "Next Train Arrival Time"};
+	// Column names for the VIEW_ROUTE state
+	private static String[] routeColumns = {"Stops", "Instructions"};
+	// Columns for Selected stops table
 	private static String[] stopsTableColumns = {"Selected Stops"};
 	private static JButton removeStop;
-	private static boolean showTrains = true;
-	/*
-	private enum viewState {
-		VIEWING_TRAINS,
-		VIEWING_STOPS,
-		VIEWING_ROUTE
-	}*/
 
-	JComboBox<String> stopInfo;
+	private enum ViewState {
+		VIEW_TRAINS,
+		VIEW_STOPS,
+		VIEW_ROUTE
+	}
+
+	private static ViewState currentViewState = ViewState.VIEW_TRAINS;
+
 	JComboBox<String> selectStop;
 
 	int draggedAtX, draggedAtY;
@@ -95,7 +102,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	static Color RED_LINE_COLOR = new Color(150,0,0);
 	// Blue Line Color
 	static Color BLUE_LINE_COLOR = new Color(6,6,80);
-	
+
 	// Values for drawing train circles
 	private static final int SB_X_OFFSET = -18;
 	private static final int SB_Y_OFFSET = -9;
@@ -107,7 +114,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	private static final Color NB_CIRCLE_COLOR = new Color(0,220,50);
 	private static final int INNER_CIRCLE_SIZE = 11;
 	private static final int OUTER_CIRCLE_SIZE = 15;
-	
+
 	/**
 	 * Sizes
 	 * **/
@@ -137,8 +144,11 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		//trainLines.clear();
 		// Set the trainLines to the given list of lines
 		trainLines = lines;//.addAll(lines);
-		// Update table and map
-		update();
+		// Update table and map if viewstate is trains
+		if (currentViewState == ViewState.VIEW_TRAINS)
+			update();
+		else
+			updateMap();
 	}
 
 	/**
@@ -246,7 +256,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		listTrains.setBackground(FORE_COLOR);
 		listTrains.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				showTrains = true;
+				currentViewState = ViewState.VIEW_TRAINS;
 				update();
 			}
 		});
@@ -256,7 +266,17 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		listStops.setBackground(FORE_COLOR);
 		listStops.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				showTrains = false;
+				currentViewState = ViewState.VIEW_STOPS;
+				update();
+			}
+		});
+
+		// List Route button
+		JButton listRoute = new JButton("List Route");
+		listRoute.setBackground(FORE_COLOR);
+		listRoute.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				currentViewState = ViewState.VIEW_ROUTE;
 				update();
 			}
 		});
@@ -311,6 +331,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 				for (String s : selectedStops) {
 					pathList.add(TripPlanner.getStopByName(s).stopID);
 				}
+				currentViewState = ViewState.VIEW_ROUTE;
 				update();
 			}
 		});
@@ -324,11 +345,13 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			stopList[s] = stops.get(s).stop_name;
 		}
 
-		// Populate combo boxes
-		stopInfo = new JComboBox<String>();
-		selectStop = new JComboBox<String>();
+		// Populate combo box
+		selectStop = new JComboBox<String>() {
+			private static final long serialVersionUID = 7447626094431663178L;
+
+
+		};
 		for(int i = 0; i < stopList.length; i++){
-			stopInfo.addItem(stopList[i]);
 			selectStop.addItem(stopList[i]);
 		}
 
@@ -486,7 +509,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		c.weightx = 1;
 		c.weighty = 0;
 		gridbag.setConstraints(topLeft, c);
-		left.add(topLeft);
+		//left.add(topLeft);
 
 		middleLeft = newFrame(0,Color.black);
 		middleLeft.setLayout(new FlowLayout());
@@ -522,7 +545,8 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		middle.add(topMiddle);
 		topMiddle.add(listTrains);
 		topMiddle.add(listStops);
-		topMiddle.add(stopInfo);
+		topMiddle.add(listRoute);
+		topMiddle.add(testSystem);
 
 		JInternalFrame bottomMiddle = newFrame();
 		//middleLeft.setBackground(new Color(255,255,255));
@@ -540,7 +564,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		 * Left JFrame
 		 * **/
 		// Add test system button
-		topLeft.add(testSystem);
+		//topLeft.add(testSystem);
 		// Add the map
 		createMap();
 		middleLeft.add(imageLabel);
@@ -653,15 +677,16 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 				Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
 				try {
-					//if (column == 0) {
-					c.setBackground(rowColors.get(row));
-					// Change font color
-					c.setForeground(Color.white);
-					/*}
+					if (currentViewState != ViewState.VIEW_ROUTE 
+							|| (currentViewState == ViewState.VIEW_ROUTE && column == 0)) {
+						c.setBackground(rowColors.get(row));
+						// Change font color
+						c.setForeground(Color.white);
+					}
 					else {
 						c.setBackground(Color.white);
 						c.setForeground(Color.black);
-					}*/
+					}
 				}
 				catch (IndexOutOfBoundsException e) {}
 
@@ -671,6 +696,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 		table.setDefaultRenderer(Object.class, cellRenderer);
 		cellRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+		table.setGridColor(Color.black);
 		table.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY, 1));
 		table.setShowVerticalLines(true);
 		table.setSize(700,700);
@@ -684,58 +710,123 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	}
 
 	/**
-	 * Updates table and map based on lines and trains
-	 * @author AG, CM and NF
-	 **/
-	public static void update() {
+	 * Updated the table based on the ViewState
+	 * **/
+	private static void updateTable() {
+		// Clear list of row colors
+		rowColors.clear();
+
+		Object[][] data = new Object[0][];
+		String[] cols = new String[0];
+
+		switch(currentViewState) {
+
+		// If the trains should be shown
+		case VIEW_TRAINS:
+			// Set columns
+			cols = trainColumns;
+
+			// Number of trains
+			int numTrains = 0;
+			// Get the total number of trains
+			for (TrainLine l : trainLines) {
+				numTrains += l.getTrains().size();
+			}
+
+			// initialize length of data array
+			data = new Object[numTrains][];
+
+			// Counter for rows in data array
+			int counter = 0;
+			// iterate through lines
+			for (TrainLine line : trainLines) {
+				String lineName = line.getLine();
+
+				// Get list of trains for each line
+				LinkedList<Train> trains = line.getTrains();
+				for (int t = 0; t < trains.size(); t++) {
+					Train train = trains.get(t);
+					String nextString = train.getTrainPredictions().get(0).getName();
+					int timeLeft = train.getTrainPredictions().get(0).getTime();
+					if (currentViewState == ViewState.VIEW_TRAINS) {
+						Object[] row = new Object[3];
+						row[0] = nextString;
+						row[1] = timeLeft;
+						row[2] = train.getTrainDestination();
+
+						rowColors.add(lineToColor(lineName));
+
+						// Add trains to data array for table
+						data[counter] = row;
+						counter++;
+					}
+				}
+			}
+			break;
+
+			// If the stops should be shown
+		case VIEW_STOPS:
+			// Set columns
+			cols = stopColumns;
+
+			// Set data array to size of the stops list
+			data = new Object[stops.size()][];
+
+			// Iterate through stops
+			for (Stop s : stops) {
+				// Create row to hold stop info
+				Object[] row = { s.stop_name };
+				rowColors.add(lineToColor(s.Line));
+				// Add row to data array
+				data[stops.indexOf(s)] = row;
+			}
+			break;
+
+			// If the route should be shown
+		case VIEW_ROUTE:
+			// Set columns
+			cols = routeColumns;
+
+			data = new Object[selectedStops.size()][];
+
+			for (int s = 0; s < selectedStops.size(); s++) {
+				String stopName = selectedStops.get(s);
+				Object[] row = { stopName, "" };
+				data[s] = row;
+				rowColors.add(lineToColor(TripPlanner.getStopByName(stopName).Line));
+			}
+			break;
+
+		}
+
+		// Set columns to trains or stops
+		if (tableModel != null) {
+			tableModel.setDataVector(data, cols);
+		}
+	}
+
+	/**
+	 * Updates map based on lines and trains
+	 * **/
+	private static void updateMap() {
 		Graphics2D g = (Graphics2D)map.getGraphics();
 		createMap();
 		drawTrainPath(pathList);
 		trainMap.clear();
-		rowColors.clear();
+
 		/*
 		trans = new AffineTransform(g.getTransform());
 		trans.scale(scaleX, scaleY);
 		g.setTransform(trans);*/
 
-		// Number of trains
-		int numTrains = 0;
-		// Get the total number of trains
-		for (TrainLine l : trainLines) {
-			numTrains += l.getTrains().size();
-		}
-
-		// If the trains should be shown
-		if (showTrains) {
-			// initialize length of data array
-			data = new Object[numTrains][];
-		}
-
-		// Counter for rows in data array
-		int counter = 0;
-		// iterate through lines
+		// Iterate through lines
 		for (TrainLine line : trainLines) {
-			String lineName = line.getLine();
-
 			// Get list of trains for each line
 			LinkedList<Train> trains = line.getTrains();
 			for (int t = 0; t < trains.size(); t++) {
 				Train train = trains.get(t);
 				String nextString = train.getTrainPredictions().get(0).getName();
-				int timeLeft = train.getTrainPredictions().get(0).getTime();
 				String destString = train.getTrainDestination();
-				if (showTrains) {
-					Object[] row = new Object[3];
-					row[0] = nextString;
-					row[1] = timeLeft;
-					row[2] = train.getTrainDestination();
-
-					rowColors.add(lineToColor(lineName));
-
-					// Add trains to data array for table
-					data[counter] = row;
-					counter++;
-				}
 
 				// Draw trains on map
 				if(stopMap.containsKey(nextString.toUpperCase()) 
@@ -746,28 +837,19 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			}
 		}
 
-		if (!showTrains) {
-			// Set data array to size of the stops list
-			data = new Object[stops.size()][];
-			// Iterate through stops
-			for (Stop s : stops) {
-				// Create row to hold stop info
-				Object[] row = { s.stop_name };
-				rowColors.add(lineToColor(s.Line));
-				// Add row to data array
-				data[stops.indexOf(s)] = row;
-			}
-		}
-
-		// Set columns to trains or stops
-		if (tableModel != null) {
-			tableModel.setDataVector(data, (showTrains ? trainColumns : stopColumns));
-		}
-
 		// Dispose of graphics object
 		g.dispose();
 		// Repaint the imageLabel
 		imageLabel.repaint();
+	}
+
+	/**
+	 * Updates table and map based on lines and trains
+	 * @author AG, CM and NF
+	 **/
+	public static void update() {
+		updateTable();
+		updateMap();
 	}
 
 	//returns the last stop
@@ -776,13 +858,13 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		String tempString = nextStop.stop_name;
 		if (!nextStop.EndOfLine) {
 			if(nextStop.stopID < dest.stopID){
-				String temp2 =  TripPlanner.getStopNameByID(nextStop.stopID - 2);
+				String temp2 =  TripPlanner.getStopNameByID(nextStop.stopID - 1);
 				if(stops.contains(TripPlanner.getStopByName(tempString))){
 					tempString = temp2;
 				}
 			}
 			if(nextStop.stopID > dest.stopID){
-				String temp2 = TripPlanner.getStopNameByID(nextStop.stopID + 2);
+				String temp2 = TripPlanner.getStopNameByID(nextStop.stopID + 1);
 				if(stops.contains(TripPlanner.getStopByName(tempString))){
 					tempString = temp2;
 				}
@@ -790,13 +872,13 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		}
 		else {
 			if(nextStop.stopID < dest.stopID){
-				String temp2 =  TripPlanner.getStopNameByID(nextStop.stopID + 2);
+				String temp2 =  TripPlanner.getStopNameByID(nextStop.stopID + 1);
 				if(stops.contains(TripPlanner.getStopByName(tempString))){
 					tempString = temp2;
 				}
 			}
 			if(nextStop.stopID > dest.stopID){
-				String temp2 = TripPlanner.getStopNameByID(nextStop.stopID - 2);
+				String temp2 = TripPlanner.getStopNameByID(nextStop.stopID - 1);
 				if(stops.contains(TripPlanner.getStopByName(tempString))){
 					tempString = temp2;
 				}
@@ -818,13 +900,14 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	 * @author NF and AG
 	 * **/
 	private void createStopsTable(JInternalFrame container) {
-		stopsTableModel = new DefaultTableModel() {
-			private static final long serialVersionUID = 36544289767178149L;
+		stopsTableModel = new StopsTableModel() {
+			private static final long serialVersionUID = 7594443031308851690L;
 
 			@Override
-			public boolean isCellEditable(int row, int column) {
-				//all cells false
-				return false;
+			public void reorder(int from, int to) {
+				for (int s = 0; s < selectedStops.size(); s++) {
+					//if (s == )
+				}
 			}
 		};
 		stopsTableModel.addTableModelListener(this);
@@ -832,11 +915,9 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		stopsTable.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY, 1));
 		stopsTable.setShowVerticalLines(true);
 
-		/*
 		stopsTable.setDragEnabled(true);
 		stopsTable.setDropMode(DropMode.INSERT_ROWS);
-		//stopsTable.setTransferHandler(new TableRowTransferHandler(table)); 
-		 */
+		stopsTable.setTransferHandler(new TableRowTransferHandler(stopsTable));
 
 		// Selection handler
 		ListSelectionModel selectModel = stopsTable.getSelectionModel();
@@ -850,7 +931,6 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 				else
 					removeStop.setEnabled(false);
 			}
-
 		});
 
 		JScrollPane scrollPane = new JScrollPane(stopsTable); 
