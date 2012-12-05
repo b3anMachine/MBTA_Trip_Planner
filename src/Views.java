@@ -6,7 +6,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.geom.AffineTransform;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -30,9 +29,6 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	public static Image map;
 	public static JLabel imageLabel;
 	static JInternalFrame middleLeft;
-	static double scaleX = 1.0;
-	static double scaleY = 1.0;
-	static AffineTransform trans;
 
 	public static final int MAX_TIME = 1000;
 	public static final int MIN_TIME = 30;
@@ -52,10 +48,12 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	public static DefaultTableModel tableModel;
 	public static JTable stopsTable;
 	public static DefaultTableModel stopsTableModel;
+	public static DefaultTableCellRenderer cellRenderer;
 	// Table data
 	static Object[][] data;
 	// Row Colors for table
 	static LinkedList<Color> rowColors = new LinkedList<Color>();
+	static LinkedList<Color> stopRowColors = new LinkedList<Color>();
 	// Stops table data
 	static Object[][] stopsData;
 	// Column names for the VIEW_TRAINS state
@@ -74,8 +72,14 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		VIEW_STOPS,
 		VIEW_ROUTE
 	}
-
 	private static ViewState currentViewState = ViewState.VIEW_TRAINS;
+	
+	private enum OptionsState {
+		EARLY_ARR,
+		EARLY_DEP,
+		FEW_TRANS
+	}
+	private static OptionsState currentOptionsState = OptionsState.FEW_TRANS;
 
 	JComboBox<String> selectStop;
 
@@ -167,7 +171,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		imageLabel = new JLabel() {
 			private static final long serialVersionUID = -5687904822158992635L;
 
-			// Custom tool tip handler
+			// Custom tooltip handler
 			// AG
 			@Override
 			public String getToolTipText(MouseEvent event) {
@@ -178,15 +182,14 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 				// Create tool tip for a train
 				for(Train s : trainMap.keySet()){
 					Point posn = trainMap.get(s);
-					if((x < posn.x + TRAIN_THRESHOLD) && (x > posn.x - TRAIN_THRESHOLD)
-							&& (y < posn.y + TRAIN_THRESHOLD) && (y > posn.y - TRAIN_THRESHOLD)) {
+					if(trainCollider(x, y, posn.x, posn.y)) {
 						LinkedList<Integer> goals = new LinkedList<Integer>();
 						for(Prediction p : s.getTrainPredictions()){
 							goals.add(TripPlanner.getStopByName(p.getName()).stopID);
 						}
 
 						drawLineFromPoint(posn, 
-								stopMap.get(TripPlanner.getStopNameByID(goals.get(0)).toUpperCase()),
+								stopMap.get(TripPlanner.getStopNameByID(goals.get(0))),
 								new Color(255, 255, 0, 200));
 						drawTrainPath(goals, new Color(255, 255, 0, 200));
 
@@ -219,8 +222,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 					Train northTrain = TripPlanner.getTrainAtStop(s, TripPlanner.Direction.NORTHBOUND);
 					Train southTrain = TripPlanner.getTrainAtStop(s, TripPlanner.Direction.SOUTHBOUND);
 
-					if ((x < posn.x + STOP_THRESHOLD) && (x > posn.x - STOP_THRESHOLD)
-							&& (y < posn.y + STOP_THRESHOLD) && (y > posn.y - STOP_THRESHOLD)){
+					if (stopCollider(x, y, posn.x, posn.y)){
 						t = "<html><font style='font-size:20;'>"+getNextTrain(s, TripPlanner.Direction.NORTHBOUND)+"<br>"
 							+ getNextTrain(s, TripPlanner.Direction.SOUTHBOUND);
 
@@ -255,9 +257,9 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		ToolTipManager.sharedInstance().setDismissDelay(10000);
 		ToolTipManager.sharedInstance().setInitialDelay(0);
 
-		JLabel depLabel = new JLabel("Departure Time");
-		JLabel arrLabel = new JLabel("Arrival Time");
-
+		/**
+		 * Spinners
+		 * **/
 		JSpinner pickArr = new JSpinner(new SpinnerDateModel());
 		JSpinner.DateEditor arrEditor = new JSpinner.DateEditor(pickArr, "HH:mm");
 		pickArr.setEditor(arrEditor);
@@ -317,7 +319,9 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		addStop.setBackground(FORE_COLOR);
 		addStop.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				selectedStops.add((String) selectStop.getSelectedItem());
+				String s = (String) selectStop.getSelectedItem();
+				selectedStops.add(s);
+				stopRowColors.add(lineToColor(TripPlanner.getStopByName(s).Line));
 				updateStopsTable();
 			}
 		});
@@ -335,6 +339,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 				Collections.reverse(removeList);
 				for (int r : removeList) {
 					selectedStops.remove(r);
+					stopRowColors.remove(r);
 				}
 				updateStopsTable();
 			}
@@ -385,22 +390,35 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		// Earliest departure radio button
 		JRadioButton earliestDep = new JRadioButton("Earliest Departure");
 		earliestDep.setBackground(FORE_COLOR);
-		//birdButton.setSelected(true);
+		earliestDep.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				currentOptionsState = OptionsState.EARLY_DEP;
+			}
+		});
 
 		// Fewest transfers radio button
 		JRadioButton fewestTrans = new JRadioButton("Fewest Transfers");
 		fewestTrans.setBackground(new Color(220,220,220));
-		//catButton.setActionCommand(catString);
+		fewestTrans.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				currentOptionsState = OptionsState.FEW_TRANS;
+			}
+		});
+		fewestTrans.setSelected(true);
 
 		// Earliest arrival radio button
 		JRadioButton earliestArr = new JRadioButton("Earliest Arrival");
 		earliestArr.setBackground(new Color(210,210,210));
-		//dogButton.setActionCommand(dogString);
+		earliestArr.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				currentOptionsState = OptionsState.EARLY_ARR;
+			}
+		});
 
 		// Button group for advanced options
 		ButtonGroup group = new ButtonGroup();
-		group.add(earliestDep);
 		group.add(fewestTrans);
+		group.add(earliestDep);
 		group.add(earliestArr);
 
 		/**
@@ -410,6 +428,14 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		JCheckBox orderedList = new JCheckBox("Ordered List");
 		orderedList.setBackground(FORE_COLOR);
 		orderedList.setSelected(true);
+
+		JCheckBox depBox = new JCheckBox("Departure Time");
+		depBox.setBackground(FORE_COLOR);
+		depBox.setSelected(false);
+
+		JCheckBox arrBox = new JCheckBox("Arrival Time");
+		depBox.setBackground(FORE_COLOR);
+		depBox.setSelected(false);
 
 		/**
 		 * Create Layout
@@ -607,10 +633,10 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		right5.add(fewestTrans);
 		right5.add(earliestArr);
 
-		lastLeft.add(depLabel);
+		lastLeft.add(depBox);
 		lastLeft.add(depFrame);
 		depFrame.add(pickDep);
-		lastRight.add(arrLabel);
+		lastRight.add(arrBox);
 		lastRight.add(arrFrame);
 		arrFrame.add(pickArr);
 
@@ -671,28 +697,8 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			}
 		};
 		tableModel.addTableModelListener(this);
-		table = new JTable(tableModel)/* {
-			private static final long serialVersionUID = -1917817069879534003L;
-
-			// Draw Line color behind row
-			@Override
-			public Component prepareRenderer (TableCellRenderer renderer, int index_row, int index_col){  
-				Component comp = super.prepareRenderer(renderer, index_row, index_col);
-
-				try {
-					comp.setBackground(rowColors.get(index_row));
-					// Change font color
-					comp.setForeground(Color.white);
-				}
-				catch (IndexOutOfBoundsException e) {}
-
-				if(isCellSelected(index_row, index_col)){
-					comp.setBackground(new Color(0, 0, 112));  
-				}
-				return comp;
-			}
-		}*/;
-		DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer() {
+		table = new JTable(tableModel);
+		cellRenderer = new DefaultTableCellRenderer() {
 			private static final long serialVersionUID = 273298630375212139L;
 
 			@Override
@@ -703,7 +709,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 				try {
 					if (currentViewState != ViewState.VIEW_ROUTE 
 							|| (currentViewState == ViewState.VIEW_ROUTE && column == 0)) {
-						c.setBackground(rowColors.get(row));
+						c.setBackground(table == Views.table ? rowColors.get(row) : stopRowColors.get(row));
 						// Change font color
 						c.setForeground(Color.white);
 					}
@@ -730,7 +736,6 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 		container.add(table.getTableHeader(), BorderLayout.PAGE_START);
 		container.add(scrollPane);
-		//container.add(table);
 	}
 
 	/**
@@ -842,11 +847,6 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		drawTrainPath(pathList, PATH_COLOR);
 		trainMap.clear();
 
-		/*
-		trans = new AffineTransform(g.getTransform());
-		trans.scale(scaleX, scaleY);
-		g.setTransform(trans);*/
-
 		// Iterate through lines
 		for (TrainLine line : trainLines) {
 			// Get list of trains for each line
@@ -857,8 +857,8 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 				String destString = train.getTrainDestination();
 
 				// Draw trains on map
-				if(stopMap.containsKey(nextString.toUpperCase()) 
-						&& stopMap.containsKey(destString.toUpperCase())
+				if(stopMap.containsKey(nextString) 
+						&& stopMap.containsKey(destString)
 						&& !nextString.equals(destString)) {
 					createTrain(train);
 				}
@@ -926,6 +926,8 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		};
 		stopsTableModel.addTableModelListener(this);
 		stopsTable = new JTable(stopsTableModel);
+		stopsTable.setDefaultRenderer(Object.class, cellRenderer);
+		stopsTable.setGridColor(Color.black);
 		stopsTable.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY, 1));
 		stopsTable.setShowVerticalLines(true);
 		stopsTable.setDragEnabled(true);
@@ -995,19 +997,19 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		//System.out.println(a + " " + b + " " + lastStop);
 
 		// Next stop position
-		int nextX = stopMap.get(nextStop.toUpperCase()).x;
-		int nextY = stopMap.get(nextStop.toUpperCase()).y;
+		int nextX = stopMap.get(nextStop).x;
+		int nextY = stopMap.get(nextStop).y;
 
 		if(nextStop.equals(dest)){
 			x = lastX;
 			y = lastY;
 		}
 		// Previous stop position
-		if(stopMap.containsKey(lastStop.toUpperCase())) {
-			lastX = stopMap.get(lastStop.toUpperCase()).x;	
-			lastY = stopMap.get(lastStop.toUpperCase()).y;
+		if(stopMap.containsKey(lastStop)) {
+			lastX = stopMap.get(lastStop).x;	
+			lastY = stopMap.get(lastStop).y;
 		}
-		//System.out.println(lastStop.toUpperCase());
+		//System.out.println(lastStop);
 
 		// If the train will soon reach the next predicted stop
 		// or the previous stop is can't be determined
@@ -1074,66 +1076,6 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		trainMap.put(t,new Point(x,y));
 		g.dispose();
 		imageLabel.repaint();
-	}
-	public static Point takeHalf(Point last, Point next){
-		Point half = new Point();
-		half.x = (next.x+last.x)/2;
-		half.y = (next.y+last.y)/2;
-		return half;
-
-	}
-	public static void pushHash(){
-		stopMap.put("OAK GROVE",new Point(799,77));
-		stopMap.put("MALDEN CENTER",new Point(798,143));
-		stopMap.put("WELLINGTON",new Point(799,214));
-		stopMap.put("SULLIVAN",new Point(799,298));
-		stopMap.put("COMMUNITY COLLEGE",new Point(801,377));
-		stopMap.put("NORTH STATION",new Point(813,471));
-		stopMap.put("CHINATOWN",new Point(734,821));
-		stopMap.put("TUFTS MEDICAL",new Point(680,876));
-		stopMap.put("BACK BAY",new Point(617,939));
-		stopMap.put("MASS AVE",new Point(560,994));
-		stopMap.put("RUGGLES",new Point(504,1051));
-		stopMap.put("ROXBURY CROSSING",new Point(449,1106));
-		stopMap.put("JACKSON SQUARE",new Point(400,1157));
-		stopMap.put("STONY BROOK",new Point(345,1211));
-		stopMap.put("GREEN STREET",new Point(291,1264));
-		stopMap.put("FOREST HILLS",new Point(239,1315));
-		stopMap.put("DOWNTOWN CROSSING",new Point(798,761));
-		stopMap.put("STATE STREET",new Point(870,681));
-		stopMap.put("HAYMARKET",new Point(867,561));
-		stopMap.put("ALEWIFE",new Point(165,321));
-		stopMap.put("DAVIS",new Point(253,321));
-		stopMap.put("PORTER SQUARE",new Point(374,343));
-		stopMap.put("HARVARD SQUARE",new Point(453,417));
-		stopMap.put("CENTRAL SQUARE",new Point(521,487));
-		stopMap.put("KENDALL/MIT",new Point(600,565));
-		stopMap.put("CHARLES/MGH",new Point(672,638));
-		stopMap.put("PARK STREET",new Point(728,691));
-		stopMap.put("SOUTH STATION",new Point(882,846));
-		stopMap.put("BROADWAY",new Point(901,942));
-		stopMap.put("ANDREW",new Point(899,1021));
-		stopMap.put("JFK/UMASS",new Point(901,1104));
-		stopMap.put("NORTH QUINCY",new Point(1075,1422));
-		stopMap.put("WOLLASTON",new Point(1147,1496));
-		stopMap.put("QUINCY CENTER",new Point(1222,1569));
-		stopMap.put("QUINCY ADAMS",new Point(1292,1639));
-		stopMap.put("BRAINTREE",new Point(1314,1794));
-		stopMap.put("BOWDOIN",new Point(746,565));
-		stopMap.put("GOVERNMENT CENTER",new Point(798,619));
-		stopMap.put("AQUARIUM",new Point(936,621));
-		stopMap.put("MAVERICK",new Point(1052,505));
-		stopMap.put("AIRPORT",new Point(1111,448));
-		stopMap.put("WOOD ISLAND",new Point(1161,399));
-		stopMap.put("ORIENT HEIGHTS",new Point(1214,345));
-		stopMap.put("SUFFOLK DOWNS",new Point(1267,292));
-		stopMap.put("BEACHMONT",new Point(1320,238));
-		stopMap.put("REVERE BEACH",new Point(1371,186));
-		stopMap.put("WONDERLAND",new Point(1435,124));
-		stopMap.put("SAVIN HILL",new Point(847,1159));
-		stopMap.put("FIELDS CORNER",new Point(797,1230));
-		stopMap.put("SHAWMUT",new Point(799,1282));
-		stopMap.put("ASHMONT",new Point(799,1342));
 	}
 
 	public static void createInstructions(LinkedList<Integer> path, int size, LinkedList<String> instructions){
@@ -1247,6 +1189,8 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		return time;
 	}
 
+	// Draws a line from one point to another point
+	// NF and AG
 	public static void drawLineFromPoint(Point startPosn, Point endPosn, Color c){
 		Graphics2D g = (Graphics2D)map.getGraphics();
 		g.setStroke(new BasicStroke(10F));
@@ -1255,6 +1199,8 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		imageLabel.repaint();
 	}
 
+	// Draws a train's path
+	// NF and AG
 	public static void drawTrainPath(LinkedList<Integer> goals, Color c){
 		Stack<Integer> results = new Stack<Integer>();
 		results = TripPlanner.graph.multiSearch(goals);
@@ -1267,49 +1213,76 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		Views.drawPath(path, c);
 	}
 
+	// Draws a line from each Stop to the next Stop in a list of stops
+	// NF and AG
 	public static void drawPath(LinkedList<Stop> path, Color color) {
 		for (int s = 0; s < path.size()-1; s++) {
-			Point startPos = stopMap.get(path.get(s).stop_name.toUpperCase());
-			Point endPos = stopMap.get(path.get(s+1).stop_name.toUpperCase());
+			Point startPos = stopMap.get(path.get(s).stop_name);
+			Point endPos = stopMap.get(path.get(s+1).stop_name);
 			drawLineFromPoint(startPos, endPos, color);
 		}
 	}
 
-	// scales the map on mouse click; scales in for left click, scales out for right click
-	// NF + AG
+	/*
+	private Train getTrainAtPosn(Point posn) {
+		return new Train();
+	}
+
+	private Stop getStopAtPosn(Point posn) {
+
+	}*/
+
+	/**
+	 * Returns true if a train was clicked
+	 * **/
+	private boolean trainCollider(int mx, int my, int tx, int ty) {
+		return collider(mx, my, tx, ty, TRAIN_THRESHOLD);
+	}
+	
+	/**
+	 * Returns true if a stop was clicked
+	 * **/
+	private boolean stopCollider(int mx, int my, int sx, int sy) {
+		return collider(mx, my, sx, sy, STOP_THRESHOLD);
+	}
+	
+	/**
+	 * Determines if the point made by mx and my
+	 * is within a certain threshold of the point
+	 * made by ox and oy
+	 * **/
+	private boolean collider(int mx, int my, int ox, int oy, int threshold) {
+		return (mx < ox + threshold) 
+			&& (mx > ox - threshold)
+			&& (my < oy + threshold) 
+			&& (my > oy - threshold);
+	}
+	
+	/**
+	 * Adds a clicked stop to the selected stops list
+	 * @author AG
+	 * **/
+	@Override
 	public void mouseClicked(MouseEvent e) {
-		int button = e.getButton();		
+		int x = e.getX();
+		int y = e.getY();
+		int button = e.getButton();
 		if (button == MouseEvent.BUTTON1) {
+			for(String s : stopMap.keySet()){
+				Point posn = stopMap.get(s);
 
-			//Graphics2D g = (Graphics2D)map.getGraphics();
-
-			/*
-				String name = JOptionPane.showInputDialog(null,
-						"What is your name?",
-						"Enter your name",
-						JOptionPane.QUESTION_MESSAGE);
-				//Point stop1 = new Point(e.getX(),e.getY());
-				//stopMap.put(name, stop1);
-				//drawNode(stopMap.get("Downtown Crossing").x,stopMap.get("Downtown Crossing").y,g);
-				System.out.println("stopMap.put('"+name+"',new Point("+e.getX()+","+e.getY()+"));");
-
-			System.out.println("button 1");
-			scaleX *= 1.5;
-			scaleY *= 1.5;*/			
-		}
-
-		/*
-			else if (button == MouseEvent.BUTTON3) {
-				System.out.println("button 3");
-				scaleX /= 1.5;
-				scaleY /= 1.5;
-				createMap(scaleX, scaleY, SCALE_TYPE);
+				if (stopCollider(x, y, posn.x, posn.y)){
+					selectedStops.add(s);
+					stopRowColors.add(lineToColor(TripPlanner.getStopByName(s).Line));
+					updateStopsTable();
+				}
 			}
-		 */
+		}
 	}
 
 	//sets the location of the map using the mouse coordinates
 	//NF
+	@Override
 	public void mouseDragged(MouseEvent e) {
 		imageLabel.setLocation(e.getX() - draggedAtX + imageLabel.getX(),
 				e.getY() - draggedAtY + imageLabel.getY());		
@@ -1317,6 +1290,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 	//obtains the current mouse coordinates upon mousePress
 	//NF
+	@Override
 	public void mousePressed(MouseEvent e) {
 
 		if (e.getSource() == imageLabel) {
@@ -1325,9 +1299,76 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		}
 	}
 
+	// Update the map when the mouse is moved over it
 	@Override
 	public void mouseMoved(MouseEvent e) {
 		updateMap();
+	}
+
+	/**
+	 * 
+	 * Stop Map
+	 * 
+	 * **/
+	public static Point takeHalf(Point last, Point next){
+		Point half = new Point();
+		half.x = (next.x+last.x)/2;
+		half.y = (next.y+last.y)/2;
+		return half;
+
+	}
+	public static void pushHash(){
+		stopMap.put("Oak Grove",new Point(799,77));
+		stopMap.put("Malden Center",new Point(798,143));
+		stopMap.put("Wellington",new Point(799,214));
+		stopMap.put("Sullivan",new Point(799,298));
+		stopMap.put("Community College",new Point(801,377));
+		stopMap.put("North Station",new Point(813,471));
+		stopMap.put("Chinatown",new Point(734,821));
+		stopMap.put("Tufts Medical",new Point(680,876));
+		stopMap.put("Back Bay",new Point(617,939));
+		stopMap.put("Mass Ave",new Point(560,994));
+		stopMap.put("Ruggles",new Point(504,1051));
+		stopMap.put("Roxbury Crossing",new Point(449,1106));
+		stopMap.put("Jackson Square",new Point(400,1157));
+		stopMap.put("Stony Brook",new Point(345,1211));
+		stopMap.put("Green Street",new Point(291,1264));
+		stopMap.put("Forest Hills",new Point(239,1315));
+		stopMap.put("Downtown Crossing",new Point(798,761));
+		stopMap.put("State Street",new Point(870,681));
+		stopMap.put("Haymarket",new Point(867,561));
+		stopMap.put("Alewife",new Point(165,321));
+		stopMap.put("Davis",new Point(253,321));
+		stopMap.put("Porter Square",new Point(374,343));
+		stopMap.put("Harvard Square",new Point(453,417));
+		stopMap.put("Central Square",new Point(521,487));
+		stopMap.put("Kendall/MIT",new Point(600,565));
+		stopMap.put("Charles/MGH",new Point(672,638));
+		stopMap.put("Park Street",new Point(728,691));
+		stopMap.put("South Station",new Point(882,846));
+		stopMap.put("Broadway",new Point(901,942));
+		stopMap.put("Andrew",new Point(899,1021));
+		stopMap.put("JFK/UMass",new Point(901,1104));
+		stopMap.put("North Quincy",new Point(1075,1422));
+		stopMap.put("Wollaston",new Point(1147,1496));
+		stopMap.put("Quincy Center",new Point(1222,1569));
+		stopMap.put("Quincy Adams",new Point(1292,1639));
+		stopMap.put("Braintree",new Point(1314,1794));
+		stopMap.put("Bowdoin",new Point(746,565));
+		stopMap.put("Government Center",new Point(798,619));
+		stopMap.put("Aquarium",new Point(936,621));
+		stopMap.put("Maverick",new Point(1052,505));
+		stopMap.put("Airport",new Point(1111,448));
+		stopMap.put("Wood Island",new Point(1161,399));
+		stopMap.put("Orient Heights",new Point(1214,345));
+		stopMap.put("Suffolk Downs",new Point(1267,292));
+		stopMap.put("Beachmont",new Point(1320,238));
+		stopMap.put("Revere Beach",new Point(1371,186));
+		stopMap.put("Wonderland",new Point(1435,124));
+		stopMap.put("Savin Hill",new Point(847,1159));
+		stopMap.put("Fields Corner",new Point(797,1230));
+		stopMap.put("Shawmut",new Point(799,1282));
+		stopMap.put("Ashmont",new Point(799,1342));
 	}
 
 	/**
@@ -1345,4 +1386,4 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	@Override
 	public void tableChanged(TableModelEvent e) {
 	}
-} 
+}

@@ -136,12 +136,12 @@ public abstract class TripPlanner {
 
 		/*
 		LinkedList<Integer> goals = new LinkedList<Integer>();
-		goals.add(70061);
-		goals.add(70093);
-		goals.add(70036);
-		goals.add(70059);
-		goals.add(70037);
-		drawTrainPath(goals);
+		goals.add(1);
+		goals.add(2);
+		goals.add(32);
+		goals.add(23);
+		graph.multiSearch(goals);
+		graph.unorderedPermSearch(goals);
 		*/
 	}
 	
