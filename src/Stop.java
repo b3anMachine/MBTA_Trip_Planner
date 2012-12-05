@@ -12,6 +12,18 @@ public class Stop {
 	public LinkedList<Integer> NextTo;
 	
 	public Stop() {}
+	
+	 //General constructor for testing purposes
+    //EN
+    public Stop(String Line, String StationName, int stopID, String stop_name, boolean StartOfLine, boolean EndOfLine, LinkedList<Integer> NextTo) {
+        this.Line = Line;
+        this.StationName = StationName;
+        this.stopID = stopID;
+        this.stop_name = stop_name;
+        this.StartOfLine = StartOfLine;
+        this.EndOfLine = EndOfLine;
+        this.NextTo = NextTo;
+    }
 
 	// Prints some fields to the console
 	// AG
