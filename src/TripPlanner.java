@@ -15,6 +15,11 @@ public abstract class TripPlanner {
 	private static final int REPEAT_TIME = 10000; // Milliseconds (10)
 	private static final int TIMER_DELAY = 10000; // Milliseconds (10)
 
+	public enum Direction{
+		NORTHBOUND,
+		SOUTHBOUND,
+		STATIC
+	}
 	// Train Graph
 	static TrainGraph graph;
 
@@ -330,16 +335,31 @@ public abstract class TripPlanner {
 		}
 		return tempStop;
 	}
-	
+	//returns a public enum Direction based on last and next stop id's
+	//NF
+	public static Direction getDirection(String last, String next){
+		if(getStopByName(last).stopID > getStopByName(next).stopID){
+			return Direction.SOUTHBOUND;
+
+		}
+		else if(getStopByName(last).stopID < getStopByName(next).stopID){
+			return Direction.NORTHBOUND;
+
+		}
+		else{ return Direction.STATIC;}
+	}
+	public static Train getTrainAtStop(String stopName, Direction d){
+		return getTrainAtStop(stopName, d ,0);
+	}
 	//Returns the train with the smallest time until arrival for the given stopname
 	//NF
-	public static Train getTrainAtStop(String stopName){
+	public static Train getTrainAtStop(String stopName, Direction d, int offset){
 		LinkedList<Train> curTrains = new LinkedList<Train>();
 		for (TrainLine line : (liveData ? liveLines : testLines)) {			
 			LinkedList<Train> trains = line.getTrains();			
 			for (int t = 0; t < trains.size(); t++) {
 				Train curTrain = trains.get(t);
-				if(curTrain.containsStop(stopName)){
+				if(curTrain.containsStop(stopName, offset) && curTrain.getTrainDirection() == d){
 					curTrains.add(curTrain);
 				}
 			}

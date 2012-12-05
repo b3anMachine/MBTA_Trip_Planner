@@ -31,7 +31,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	static JInternalFrame middleLeft;
 	public static JCheckBox orderedList;
 
-	public static final int MAX_TIME = 800;
+	public static final int MAX_TIME = 1000;
 	public static final int MIN_TIME = 30;
 
 	private static final int STOP_THRESHOLD = 15;
@@ -67,7 +67,8 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	// Columns for Selected stops table
 	private static String[] stopsTableColumns = {"Selected Stops"};
 	private static JButton removeStop;
-
+	
+	
 	private enum ViewState {
 		VIEW_TRAINS,
 		VIEW_STOPS,
@@ -220,16 +221,27 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 				for(String s : stopMap.keySet()){
 					Point posn = stopMap.get(s);
 
-					Train nextTrain = TripPlanner.getTrainAtStop(s);//getNextTrain(s);
+					Train northTrain = TripPlanner.getTrainAtStop(s, TripPlanner.Direction.NORTHBOUND);
+					Train southTrain = TripPlanner.getTrainAtStop(s, TripPlanner.Direction.SOUTHBOUND);
 
 					if (stopCollider(x, y, posn.x, posn.y)){
-						t = "<html><font style='font-size:20;'>"+getNextTrain(s);
+						t = "<html><font style='font-size:20;'>"+getNextTrain(s, TripPlanner.Direction.NORTHBOUND)+"<br>"
+							+ getNextTrain(s, TripPlanner.Direction.SOUTHBOUND);
 
-						if (nextTrain != null) {
-							Point trainPosn = trainMap.get(nextTrain);
+						if (northTrain != null) {
+							Point northPosn = trainMap.get(northTrain);
 							Graphics2D g = (Graphics2D) map.getGraphics();
 							g.setStroke(new BasicStroke(5f));
-							g.setColor(new Color(0,190,190));
+							g.setColor(NB_CIRCLE_COLOR);
+							if(northPosn != null)
+							g.drawOval(northPosn.x+CIRCLE_DIFF-2, northPosn.y+CIRCLE_DIFF-2, 20, 20);
+						}
+						if (southTrain != null) {
+							Point trainPosn = trainMap.get(southTrain);
+							Graphics2D g = (Graphics2D) map.getGraphics();
+							g.setStroke(new BasicStroke(5f));
+							g.setColor(SB_CIRCLE_COLOR);
+							if(trainPosn != null)
 							g.drawOval(trainPosn.x+CIRCLE_DIFF-2, trainPosn.y+CIRCLE_DIFF-2, 20, 20);
 						}
 
@@ -802,11 +814,15 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 				for (int t = 0; t < trains.size(); t++) {
 					Train train = trains.get(t);
 					String nextString = train.getTrainPredictions().get(0).getName();
+					
+					
+					
 					int timeLeft = train.getTrainPredictions().get(0).getTime();
+					
 					if (currentViewState == ViewState.VIEW_TRAINS) {
 						Object[] row = new Object[3];
 						row[0] = nextString;
-						row[1] = timeLeft;
+						row[1] = DateTime.minutesLeft(train, nextString) + ":" + DateTime.secondsLeft(train, nextString);
 						row[2] = train.getTrainDestination();
 
 						rowColors.add(lineToColor(lineName));
@@ -830,7 +846,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			// Iterate through stops
 			for (Stop s : stops) {
 				// Create row to hold stop info
-				Object[] row = { s.stop_name, getNextTrain(s.stop_name) };
+				Object[] row = { s.stop_name, getNextClosestTrain(s.stop_name) };
 				rowColors.add(lineToColor(s.Line));
 				// Add row to data array
 				data[stops.indexOf(s)] = row;
@@ -1067,8 +1083,8 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			//	x = takeHalf(new Point(lastX,lastY), new Point(nextX,nextY)).x;
 			//	y = takeHalf(new Point(lastX,lastY), new Point(nextX,nextY)).y;
 		}
-
-		if(last.stopID < next.stopID){
+		TripPlanner.Direction trainDirection = TripPlanner.getDirection(lastStop, nextStop);
+		if(trainDirection == TripPlanner.Direction.SOUTHBOUND){
 			// SOUTH BOUND
 			x += SB_X_OFFSET;
 			y += SB_Y_OFFSET;
@@ -1077,7 +1093,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			g.setColor(SB_CIRCLE_COLOR);
 			g.fillOval(x, y, INNER_CIRCLE_SIZE, INNER_CIRCLE_SIZE);
 		}
-		if(last.stopID >= next.stopID){
+		else if(trainDirection == TripPlanner.Direction.NORTHBOUND){
 			// NORTH BOUND
 			x += NB_X_OFFSET;
 			y += NB_Y_OFFSET;
@@ -1085,6 +1101,16 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			g.fillOval(x+CIRCLE_DIFF, y+CIRCLE_DIFF, OUTER_CIRCLE_SIZE, OUTER_CIRCLE_SIZE);
 			g.setColor(NB_CIRCLE_COLOR);
 			g.fillOval(x, y, INNER_CIRCLE_SIZE, INNER_CIRCLE_SIZE);
+		}
+		else{
+			//STATIC
+			x += NB_X_OFFSET;
+			y += NB_Y_OFFSET;
+			g.setColor(CIRCLE_BACK_COLOR);
+			g.fillOval(x+CIRCLE_DIFF, y+CIRCLE_DIFF, OUTER_CIRCLE_SIZE, OUTER_CIRCLE_SIZE);
+			g.setColor(new Color(255,255,0));
+			g.fillOval(x, y, INNER_CIRCLE_SIZE, INNER_CIRCLE_SIZE);
+			
 		}
 
 		trainMap.put(t,new Point(x,y));
@@ -1096,7 +1122,8 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		if (!path.isEmpty()) {
 			String firstStop = TripPlanner.getStopNameByID(path.get(0));
 			String lastStop = TripPlanner.getStopNameByID(path.getLast());
-			Train nearestTrain = TripPlanner.getTrainAtStop(firstStop);
+			TripPlanner.Direction direction = TripPlanner.getDirection(firstStop, lastStop);
+			Train nearestTrain = TripPlanner.getTrainAtStop(firstStop, direction);
 
 			int sec = 0;
 			int min = 0;
@@ -1129,10 +1156,32 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			}
 		}
 	}
-
-	public static String getNextTrain(String stopName){
-		Train nearestTrain = TripPlanner.getTrainAtStop(stopName);
-
+	public static TripPlanner.Direction getClosestTrain(Train north, Train south, String stopName){
+		if((north != null) && (south !=null)){
+		int northTime = north.getPredictionByName(stopName).getTime();
+		int southTime = south.getPredictionByName(stopName).getTime();
+		if(northTime < southTime) return TripPlanner.Direction.NORTHBOUND;
+		if(southTime < northTime) return TripPlanner.Direction.SOUTHBOUND;
+		else{return TripPlanner.Direction.STATIC;}
+		}
+		else{
+			return TripPlanner.Direction.STATIC;
+		}
+	}
+	public static String getDirectionString(TripPlanner.Direction d){
+		String direction = d.toString().toLowerCase();
+		direction = direction.substring(0,1).toUpperCase() + direction.substring(1,direction.length());
+		return direction;
+	}
+	public static String getNextClosestTrain(String stopName){
+		Train north = TripPlanner.getTrainAtStop(stopName, TripPlanner.Direction.NORTHBOUND);
+		Train south = TripPlanner.getTrainAtStop(stopName, TripPlanner.Direction.SOUTHBOUND);
+		TripPlanner.Direction direction = getClosestTrain(north,south,stopName);
+		return getNextTrain(stopName, direction);
+	}
+	public static String getNextTrain(String stopName, TripPlanner.Direction d){
+		Train nearestTrain = TripPlanner.getTrainAtStop(stopName, d);	
+		String direction = getDirectionString(d);
 		if(nearestTrain != null) {
 			int sec = nearestTrain.getPredictionByName(stopName).getTime();
 			int min = sec/60;
@@ -1146,7 +1195,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 				stopInfo = "Train arrived "+-min+" minute(s) & "+-sec+" second(s) ago.";
 			else if (sec <= 0)
 				stopInfo = "Train arrived "+-sec+" second(s) ago.";
-			return stopInfo;
+			return direction + " " + stopInfo;
 		}
 		else{
 			return "There are no approaching trains.";
