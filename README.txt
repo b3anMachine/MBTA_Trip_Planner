@@ -55,6 +55,10 @@ menu and the "Add Stop" button. When all stops are added, make sure that the "Or
 checkbox is NOT CHECKED, and click "Calculate Route". The path will be displayed in the "List Routes"
 table and hilighted on the graph.
 
+**Note: The unordered algorithm works by computing all possible orders and then computing a path.
+This takes factorial time, so it will take longer for longer lists of stops. Try to limit it to
+7 or 8 at the most when possible**
+
 
 7. For any trip on the T, the user wants the option to specify departure and/or arrival times. (Desirable)
 When selecting a list of stops to visit, the user can enter desired departure and arrival times. To 
