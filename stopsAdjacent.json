@@ -96,7 +96,7 @@
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "Downtown Crossing",
-		"NextTo": ["10", "12", "40"]
+		"NextTo": ["10", "12", "47"]
 	},
 	{
 		"Line": "Orange",
@@ -281,208 +281,208 @@
 	{
 		"Line": "Red",
 		"StationName": "ALEWIFE",
-		"stopID": "32",
+		"stopID": "55",
 		"StartOfLine": "false",
 		"EndOfLine": "true",
 		"stop_name": "Alewife",
-		"NextTo": ["33"]
+		"NextTo": ["54"]
 	},
 	{
 		"Line": "Red",
 		"StationName": "DAVIS",
-		"stopID": "33",
+		"stopID": "54",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "Davis",
-		"NextTo": ["32", "34"]
+		"NextTo": ["55", "53"]
 	},
 	{
 		"Line": "Red",
 		"StationName": "PORTER",
-		"stopID": "34",
+		"stopID": "53",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "Porter Square",
-		"NextTo": ["33", "35"]
+		"NextTo": ["54", "52"]
 	},
 	{
 		"Line": "Red",
 		"StationName": "HARVARD",
-		"stopID": "35",
+		"stopID": "52",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "Harvard Square",
-		"NextTo": ["34", "36"]
+		"NextTo": ["53", "51"]
 	},
 	{
 		"Line": "Red",
 		"StationName": "CENTRAL",
-		"stopID": "36",
+		"stopID": "51",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "Central Square",
-		"NextTo": ["35", "37"]
+		"NextTo": ["52", "50"]
 	},
 	{
 		"Line": "Red",
 		"StationName": "KENDALL",
-		"stopID": "37",
+		"stopID": "50",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "Kendall/MIT",
-		"NextTo": ["36", "38"]
+		"NextTo": ["51", "49"]
 	},
 	{
 		"Line": "Red",
 		"StationName": "CHARLES MGH",
-		"stopID": "38",
+		"stopID": "49",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "Charles/MGH",
-		"NextTo": ["37", "39"]
+		"NextTo": ["50", "48"]
 	},
 	{
 		"Line": "Red",
 		"StationName": "PARK",
-		"stopID": "39",
+		"stopID": "48",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "Park Street",
-		"NextTo": ["38", "40"]
+		"NextTo": ["49", "47"]
 	},
 	{
 		"Line": "Red",
 		"StationName": "DOWNTOWN CROSSING",
-		"stopID": "40",
+		"stopID": "47",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "Downtown Crossing",
-		"NextTo": ["39", "41", "11"]
+		"NextTo": ["48", "46", "11"]
 	},
 	{
 		"Line": "Red",
 		"StationName": "SOUTH",
-		"stopID": "41",
+		"stopID": "46",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "South Station",
-		"NextTo": ["40", "42"]
+		"NextTo": ["47", "45"]
 	},
 	{
 		"Line": "Red",
 		"StationName": "BROADWAY",
-		"stopID": "42",
+		"stopID": "45",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "Broadway",
-		"NextTo": ["41", "43"]
+		"NextTo": ["46", "44"]
 	},
 	{
 		"Line": "Red",
 		"StationName": "ANDREW",
-		"stopID": "43",
+		"stopID": "44",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "Andrew",
-		"NextTo": ["42", "44"]
+		"NextTo": ["45", "43"]
 	},
 	{
 		"Line": "Red",
 		"StationName": "JFK",
-		"stopID": "44",
+		"stopID": "43",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "JFK/UMass",
-		"NextTo": ["43", "45", "49"]
+		"NextTo": ["44", "42", "38"]
 	},
 	{
 		"Line": "Red",
 		"StationName": "SAVIN HILL",
-		"stopID": "45",
+		"stopID": "42",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "Savin Hill",
-		"NextTo": ["44", "46"]
+		"NextTo": ["43", "41"]
 	},
 	{
 		"Line": "Red",
 		"StationName": "FIELDS CORNER",
-		"stopID": "46",
+		"stopID": "41",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "Fields Corner",
-		"NextTo": ["45", "47"]
+		"NextTo": ["42", "40"]
 	},
 	{
 		"Line": "Red",
 		"StationName": "SHAWMUT",
-		"stopID": "47",
+		"stopID": "40",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "Shawmut",
-		"NextTo": ["46", "48"]
+		"NextTo": ["41", "39"]
 	},
 	{
 		"Line": "Red",
 		"StationName": "ASHMONT",
-		"stopID": "48",
+		"stopID": "39",
 		"StartOfLine": "false",
 		"EndOfLine": "true",
 		"stop_name": "Ashmont",
-		"NextTo": ["47"]
+		"NextTo": ["40"]
 	},
 	{
 		"Line": "Red",
 		"StationName": "JFK",
-		"stopID": "49",
+		"stopID": "38",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "JFK/UMass",
-		"NextTo": ["43", "50", "44"]
+		"NextTo": ["44", "37", "43"]
 	},
 	{
 		"Line": "Red",
 		"StationName": "NORTH QUINCY",
-		"stopID": "50",
+		"stopID": "37",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "North Quincy",
-		"NextTo": ["49", "51"]
+		"NextTo": ["38", "36"]
 	},
 	{
 		"Line": "Red",
 		"StationName": "WOLLASTON",
-		"stopID": "51",
+		"stopID": "36",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "Wollaston",
-		"NextTo": ["50", "52"]
+		"NextTo": ["37", "35"]
 	},
 	{
 		"Line": "Red",
 		"StationName": "QUINCY CENTER",
-		"stopID": "52",
+		"stopID": "35",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "Quincy Center",
-		"NextTo": ["51", "53"]
+		"NextTo": ["36", "34"]
 	},
 	{
 		"Line": "Red",
 		"StationName": "QUINCY ADAMS",
-		"stopID": "53",
+		"stopID": "34",
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "Quincy Adams",
-		"NextTo": ["52", "55"]
+		"NextTo": ["35", "33"]
 	},
 	{
 		"Line": "Red",
 		"StationName": "BRAINTREE",
-		"stopID": "55",
+		"stopID": "33",
 		"StartOfLine": "false",
 		"EndOfLine": "true",
 		"stop_name": "Braintree",
-		"NextTo": ["53"]
+		"NextTo": ["34"]
 	}
 ]

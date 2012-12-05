@@ -82,10 +82,25 @@ public class Train {
 		}
 		return prediction;
 	}
+	public TripPlanner.Direction getTrainDirection(){
+		if(predictions.size() == 1){
+			return null;
+		}
+		else{
+		return TripPlanner.getDirection(predictions.get(0).getName(), predictions.get(1).getName());
+		}
+	}
 	public boolean containsStop(String stopName){
+		return containsStop(stopName, 0);
+	}
+	//returns true if the current train has a prediction of the stopName at the given time or greater
+	public boolean containsStop(String stopName, int offset){
 		boolean contains = false;
 		for(Prediction p : predictions){
-			contains = contains || checkName(p.getName(),stopName);// || checkName(destination, stopName);
+			contains = contains || 
+			(checkName(p.getName(),stopName) && p.getTime() >= offset);
+			
+			// || checkName(destination, stopName);
 		}
 		return contains;
 	}
