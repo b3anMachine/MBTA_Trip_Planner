@@ -67,8 +67,8 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	// Columns for Selected stops table
 	private static String[] stopsTableColumns = {"Selected Stops"};
 	private static JButton removeStop;
-	
-	
+
+
 	private enum ViewState {
 		VIEW_TRAINS,
 		VIEW_STOPS,
@@ -86,6 +86,8 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	JComboBox<String> selectStop;
 
 	int draggedAtX, draggedAtY;
+
+	static int timeOffset = 0;
 
 	/**
 	 * Colors
@@ -217,7 +219,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 					}
 				}
 
-				// Create tool tip for a map
+				// Create tool tip for a stop
 				for(String s : stopMap.keySet()){
 					Point posn = stopMap.get(s);
 
@@ -226,23 +228,25 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 					if (stopCollider(x, y, posn.x, posn.y)){
 						t = "<html><font style='font-size:20;'>"+getNextTrain(s, TripPlanner.Direction.NORTHBOUND)+"<br>"
-							+ getNextTrain(s, TripPlanner.Direction.SOUTHBOUND);
+								+ getNextTrain(s, TripPlanner.Direction.SOUTHBOUND);
 
+						// Draw northbound train
 						if (northTrain != null) {
 							Point northPosn = trainMap.get(northTrain);
 							Graphics2D g = (Graphics2D) map.getGraphics();
 							g.setStroke(new BasicStroke(5f));
 							g.setColor(NB_CIRCLE_COLOR);
 							if(northPosn != null)
-							g.drawOval(northPosn.x+CIRCLE_DIFF-2, northPosn.y+CIRCLE_DIFF-2, 20, 20);
+								g.drawOval(northPosn.x+CIRCLE_DIFF-2, northPosn.y+CIRCLE_DIFF-2, 20, 20);
 						}
+						// Draw southbound train
 						if (southTrain != null) {
 							Point trainPosn = trainMap.get(southTrain);
 							Graphics2D g = (Graphics2D) map.getGraphics();
 							g.setStroke(new BasicStroke(5f));
 							g.setColor(SB_CIRCLE_COLOR);
 							if(trainPosn != null)
-							g.drawOval(trainPosn.x+CIRCLE_DIFF-2, trainPosn.y+CIRCLE_DIFF-2, 20, 20);
+								g.drawOval(trainPosn.x+CIRCLE_DIFF-2, trainPosn.y+CIRCLE_DIFF-2, 20, 20);
 						}
 
 						t += "</font></html>";
@@ -323,9 +327,12 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			public void actionPerformed(ActionEvent e) {
 				int index = selectStop.getSelectedIndex();
 				Stop s = stops.get(index);
-				
+
 				selectedStops.add(s.stopID);
+				System.out.println(s.stopID);
+				System.out.println(selectedStops.toString());
 				stopRowColors.add(lineToColor(s.Line));
+
 				updateStopsTable();
 			}
 		});
@@ -354,16 +361,11 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		calcRoute.setBackground(FORE_COLOR);
 		calcRoute.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				pathList.clear();
-				pathList.addAll(selectedStops);
+				timeOffset = 0;
 
-				LinkedList<String> bs = new LinkedList<String>();
-				createInstructions(pathList, pathList.size(), bs);
-				/*for (String s : bs)
-					System.out.println(s);*/
-				instructions.clear();
-				instructions.addAll(bs);
-				
+				pathList = new LinkedList<Integer>();
+				pathList = selectedStops;
+
 				results = new Stack<Integer>();
 
 				// Use unordered search
@@ -372,9 +374,15 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 				// Use ordered search
 				else
 					results = TripPlanner.graph.multiSearch(pathList);
-				
-				System.out.println(results.toString());
-				
+
+				LinkedList<Integer> path = new LinkedList<Integer>();
+				path.addAll(results);
+
+				LinkedList<String> insts = new LinkedList<String>();
+				createInstructions(path, path.size(), insts);
+				instructions = new LinkedList<String>();
+				instructions = insts;
+
 				currentViewState = ViewState.VIEW_ROUTE;
 				update();
 			}
@@ -425,190 +433,190 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		/**
 		 * Radio buttons
 		 **/
-		 // Earliest departure radio button
-		 JRadioButton earliestDep = new JRadioButton("Earliest Departure");
-		 earliestDep.setBackground(FORE_COLOR);
-		 earliestDep.addActionListener(new ActionListener() {
-			 public void actionPerformed(ActionEvent e) {
-				 currentOptionsState = OptionsState.EARLY_DEP;
-			 }
-		 });
+		// Earliest departure radio button
+		JRadioButton earliestDep = new JRadioButton("Earliest Departure");
+		earliestDep.setBackground(FORE_COLOR);
+		earliestDep.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				currentOptionsState = OptionsState.EARLY_DEP;
+			}
+		});
 
-		 // Fewest transfers radio button
-		 JRadioButton fewestTrans = new JRadioButton("Fewest Transfers");
-		 fewestTrans.setBackground(new Color(220,220,220));
-		 fewestTrans.addActionListener(new ActionListener() {
-			 public void actionPerformed(ActionEvent e) {
-				 currentOptionsState = OptionsState.FEW_TRANS;
-			 }
-		 });
-		 fewestTrans.setSelected(true);
+		// Fewest transfers radio button
+		JRadioButton fewestTrans = new JRadioButton("Fewest Transfers");
+		fewestTrans.setBackground(new Color(220,220,220));
+		fewestTrans.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				currentOptionsState = OptionsState.FEW_TRANS;
+			}
+		});
+		fewestTrans.setSelected(true);
 
-		 // Earliest arrival radio button
-		 JRadioButton earliestArr = new JRadioButton("Earliest Arrival");
-		 earliestArr.setBackground(new Color(210,210,210));
-		 earliestArr.addActionListener(new ActionListener() {
-			 public void actionPerformed(ActionEvent e) {
-				 currentOptionsState = OptionsState.EARLY_ARR;
-			 }
-		 });
+		// Earliest arrival radio button
+		JRadioButton earliestArr = new JRadioButton("Earliest Arrival");
+		earliestArr.setBackground(new Color(210,210,210));
+		earliestArr.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				currentOptionsState = OptionsState.EARLY_ARR;
+			}
+		});
 
-		 // Button group for advanced options
-		 ButtonGroup group = new ButtonGroup();
-		 group.add(fewestTrans);
-		 group.add(earliestDep);
-		 group.add(earliestArr);
+		// Button group for advanced options
+		ButtonGroup group = new ButtonGroup();
+		group.add(fewestTrans);
+		group.add(earliestDep);
+		group.add(earliestArr);
 
-		 /**
-		  * Checkboxes
-		  **/
-		 //define all checkboxes
-		 orderedList = new JCheckBox("Ordered List");
-		 orderedList.setBackground(FORE_COLOR);
-		 orderedList.setSelected(true);
+		/**
+		 * Checkboxes
+		 **/
+		//define all checkboxes
+		orderedList = new JCheckBox("Ordered List");
+		orderedList.setBackground(FORE_COLOR);
+		orderedList.setSelected(true);
 
-		 JCheckBox depBox = new JCheckBox("Departure Time");
-		 depBox.setBackground(FORE_COLOR);
-		 depBox.setSelected(false);
+		JCheckBox depBox = new JCheckBox("Departure Time");
+		depBox.setBackground(FORE_COLOR);
+		depBox.setSelected(false);
 
-		 JCheckBox arrBox = new JCheckBox("Arrival Time");
-		 depBox.setBackground(FORE_COLOR);
-		 depBox.setSelected(false);
+		JCheckBox arrBox = new JCheckBox("Arrival Time");
+		depBox.setBackground(FORE_COLOR);
+		depBox.setSelected(false);
 
-		 /**
-		  * Create Layout
-		  * **/
-		 GridBagLayout gridbag = new GridBagLayout();
-		 GridBagConstraints c = new GridBagConstraints();
-		 c.fill = GridBagConstraints.BOTH;
-		 frame.setLayout(new GridLayout(1,2));
-		 // Make the window visible
-		 frame.setVisible(true);
+		/**
+		 * Create Layout
+		 * **/
+		GridBagLayout gridbag = new GridBagLayout();
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill = GridBagConstraints.BOTH;
+		frame.setLayout(new GridLayout(1,2));
+		// Make the window visible
+		frame.setVisible(true);
 
-		 JInternalFrame plannerFrame = newFrame();
-		 plannerFrame.setLayout(gridbag);
-		 //create left, middle, right internal jframes
-		 JInternalFrame left = newFrame();
-		 JInternalFrame right = newFrame();
-		 JInternalFrame middle = newFrame();
+		JInternalFrame plannerFrame = newFrame();
+		plannerFrame.setLayout(gridbag);
+		//create left, middle, right internal jframes
+		JInternalFrame left = newFrame();
+		JInternalFrame right = newFrame();
+		JInternalFrame middle = newFrame();
 
-		 frame.add(left);
-		 frame.add(plannerFrame);
+		frame.add(left);
+		frame.add(plannerFrame);
 
-		 c.weightx = 1;
-		 c.weighty = 1;
-		 middle.setMinimumSize(new Dimension(800,0));	
-		 gridbag.setConstraints(middle, c);
-		 plannerFrame.add(middle);
+		c.weightx = 1;
+		c.weighty = 1;
+		middle.setMinimumSize(new Dimension(800,0));	
+		gridbag.setConstraints(middle, c);
+		plannerFrame.add(middle);
 
-		 //c.gridheight = GridBagConstraints.REMAINDER;
-		 c.weightx = 0;
-		 //c.gridx = 2;
-		 //c.gridy = 0;
-		 right.setMinimumSize(new Dimension(250,500));	
-		 gridbag.setConstraints(right, c);
-		 //plannerFrame.add(right);
+		//c.gridheight = GridBagConstraints.REMAINDER;
+		c.weightx = 0;
+		//c.gridx = 2;
+		//c.gridy = 0;
+		right.setMinimumSize(new Dimension(250,500));	
+		gridbag.setConstraints(right, c);
+		//plannerFrame.add(right);
 
-		 //set internal jframe layouts
-		 left.setLayout(gridbag);
-		 middle.setLayout(gridbag);
-		 //right.setLayout(new GridLayout(3,1,5,5));
-		 right.setLayout(gridbag);
+		//set internal jframe layouts
+		left.setLayout(gridbag);
+		middle.setLayout(gridbag);
+		//right.setLayout(new GridLayout(3,1,5,5));
+		right.setLayout(gridbag);
 
-		 JInternalFrame plannerControls = newFrame();
-		 plannerControls.setLayout(gridbag);
-		 gridbag.setConstraints(plannerControls, c);
+		JInternalFrame plannerControls = newFrame();
+		plannerControls.setLayout(gridbag);
+		gridbag.setConstraints(plannerControls, c);
 
-		 //////////////////////////////////////
-		 // Set up layout for RIGHT JFrame
+		//////////////////////////////////////
+		// Set up layout for RIGHT JFrame
 
-		 JInternalFrame right1 = newFrame(0,FORE_COLOR);
-		 right1.setMinimumSize(new Dimension(300,40));
-		 right1.setLayout(new FlowLayout());
-		 c.gridwidth = GridBagConstraints.REMAINDER; //end row
-		 c.weightx = 0.3;
-		 c.weighty = 0;
-		 gridbag.setConstraints(right1, c);
-		 //right.add(right1);
+		JInternalFrame right1 = newFrame(0,FORE_COLOR);
+		right1.setMinimumSize(new Dimension(300,40));
+		right1.setLayout(new FlowLayout());
+		c.gridwidth = GridBagConstraints.REMAINDER; //end row
+		c.weightx = 0.3;
+		c.weighty = 0;
+		gridbag.setConstraints(right1, c);
+		//right.add(right1);
 
-		 JInternalFrame stopTableControls = newFrame(0, new Color(200,200,200));
-		 stopTableControls.setMinimumSize(new Dimension(300,40));
-		 stopTableControls.setLayout(new GridLayout(1,3));
-		 c.gridwidth = GridBagConstraints.REMAINDER; //end row
-		 c.weightx = 0.3;
-		 c.weighty = 0;
-		 gridbag.setConstraints(stopTableControls, c);
-		 right.add(stopTableControls);
+		JInternalFrame stopTableControls = newFrame(0, new Color(200,200,200));
+		stopTableControls.setMinimumSize(new Dimension(300,40));
+		stopTableControls.setLayout(new GridLayout(1,3));
+		c.gridwidth = GridBagConstraints.REMAINDER; //end row
+		c.weightx = 0.3;
+		c.weighty = 0;
+		gridbag.setConstraints(stopTableControls, c);
+		right.add(stopTableControls);
 
-		 JInternalFrame right3 = newFrame(0,new Color(200,200,200));
-		 //right3.setMinimumSize(new Dimension(300,40));
-		 right3.setLayout(new GridLayout(1,2));
-		 c.weighty = 1;
-		 c.gridwidth = GridBagConstraints.REMAINDER; //end row
-		 gridbag.setConstraints(right3, c);
-		 right.add(right3);
+		JInternalFrame right3 = newFrame(0,new Color(200,200,200));
+		//right3.setMinimumSize(new Dimension(300,40));
+		right3.setLayout(new GridLayout(1,2));
+		c.weighty = 1;
+		c.gridwidth = GridBagConstraints.REMAINDER; //end row
+		gridbag.setConstraints(right3, c);
+		right.add(right3);
 
-		 JInternalFrame right4 = newFrame(0,new Color(200,200,200));
-		 //right4.setMinimumSize(new Dimension(300,40));
-		 right4.setLayout(new FlowLayout());
-		 c.weightx = 1;
-		 //c.weighty = 0;
-		 c.gridwidth = GridBagConstraints.REMAINDER; //end row
-		 gridbag.setConstraints(right4, c);
-		 plannerControls.add(right4);
+		JInternalFrame right4 = newFrame(0,new Color(200,200,200));
+		//right4.setMinimumSize(new Dimension(300,40));
+		right4.setLayout(new FlowLayout());
+		c.weightx = 1;
+		//c.weighty = 0;
+		c.gridwidth = GridBagConstraints.REMAINDER; //end row
+		gridbag.setConstraints(right4, c);
+		plannerControls.add(right4);
 
-		 JInternalFrame right5 = newFrame(0,new Color(200,200,200));
-		 //right5.setMinimumSize(new Dimension(300,40));
-		 right5.setLayout(new GridLayout(3,1,5,5));
-		 c.weighty = 1;
-		 c.gridwidth = GridBagConstraints.REMAINDER; //end row
-		 gridbag.setConstraints(right5, c);
-		 plannerControls.add(right5);
+		JInternalFrame right5 = newFrame(0,new Color(200,200,200));
+		//right5.setMinimumSize(new Dimension(300,40));
+		right5.setLayout(new GridLayout(3,1,5,5));
+		c.weighty = 1;
+		c.gridwidth = GridBagConstraints.REMAINDER; //end row
+		gridbag.setConstraints(right5, c);
+		plannerControls.add(right5);
 
-		 JInternalFrame right6 = newFrame(0,new Color(200,200,200));
-		 //right6.setMinimumSize(new Dimension(300,60));
-		 right6.setLayout(new GridLayout(1,2,5,5));
-		 c.weighty = 1;
-		 c.gridwidth = GridBagConstraints.REMAINDER; //end row
-		 gridbag.setConstraints(right6, c);
-		 plannerControls.add(right6);
+		JInternalFrame right6 = newFrame(0,new Color(200,200,200));
+		//right6.setMinimumSize(new Dimension(300,60));
+		right6.setLayout(new GridLayout(1,2,5,5));
+		c.weighty = 1;
+		c.gridwidth = GridBagConstraints.REMAINDER; //end row
+		gridbag.setConstraints(right6, c);
+		plannerControls.add(right6);
 
-		 JInternalFrame lastLeft = newFrame(0,new Color(220,220,220));
-		 lastLeft.setLayout(new GridLayout(3,1,5,5));
-		 JInternalFrame lastRight = newFrame(0,new Color(220,220,220));
-		 lastRight.setLayout(new GridLayout(3,1,5,5));
-		 right6.add(lastLeft);
-		 right6.add(lastRight);
-		 JInternalFrame depFrame = newFrame(0,new Color(220,220,220));
-		 depFrame.setLayout(new GridLayout(1,2,5,5));
-		 JInternalFrame arrFrame = newFrame(0,new Color(220,220,220));
-		 arrFrame.setLayout(new GridLayout(1,2,5,5));
+		JInternalFrame lastLeft = newFrame(0,new Color(220,220,220));
+		lastLeft.setLayout(new GridLayout(3,1,5,5));
+		JInternalFrame lastRight = newFrame(0,new Color(220,220,220));
+		lastRight.setLayout(new GridLayout(3,1,5,5));
+		right6.add(lastLeft);
+		right6.add(lastRight);
+		JInternalFrame depFrame = newFrame(0,new Color(220,220,220));
+		depFrame.setLayout(new GridLayout(1,2,5,5));
+		JInternalFrame arrFrame = newFrame(0,new Color(220,220,220));
+		arrFrame.setLayout(new GridLayout(1,2,5,5));
 
-		 plannerControls.add(right1);
-		 ///////////////////////////////////////
+		plannerControls.add(right1);
+		///////////////////////////////////////
 
-		 //////////////////////////////////////
-		 // Set up layout for LEFT JFrame
-		 JInternalFrame topLeft = newFrame(2,FORE_COLOR);
-		 topLeft.setLayout(new FlowLayout());
-		 topLeft.setMinimumSize(new Dimension(300,40));
-		 c.gridwidth = GridBagConstraints.REMAINDER; //end row
-		 //c2.gridheight = GridBagConstraints.RELATIVE;
-		 c.weightx = 1;
-		 c.weighty = 0;
-		 gridbag.setConstraints(topLeft, c);
-		 //left.add(topLeft);
+		//////////////////////////////////////
+		// Set up layout for LEFT JFrame
+		JInternalFrame topLeft = newFrame(2,FORE_COLOR);
+		topLeft.setLayout(new FlowLayout());
+		topLeft.setMinimumSize(new Dimension(300,40));
+		c.gridwidth = GridBagConstraints.REMAINDER; //end row
+		//c2.gridheight = GridBagConstraints.RELATIVE;
+		c.weightx = 1;
+		c.weighty = 0;
+		gridbag.setConstraints(topLeft, c);
+		//left.add(topLeft);
 
-		 middleLeft = newFrame(0,Color.black);
-		 middleLeft.setLayout(new FlowLayout());
-		 //middleLeft.setMinimumSize(new Dimension(100,100));
-		 c.gridwidth = GridBagConstraints.REMAINDER; //end row
-		 //c2.gridheight = GridBagConstraints.RELATIVE;
-		 c.weighty = 1;
-		 gridbag.setConstraints(middleLeft, c);
-		 left.add(middleLeft);
+		middleLeft = newFrame(0,Color.black);
+		middleLeft.setLayout(new FlowLayout());
+		//middleLeft.setMinimumSize(new Dimension(100,100));
+		c.gridwidth = GridBagConstraints.REMAINDER; //end row
+		//c2.gridheight = GridBagConstraints.RELATIVE;
+		c.weighty = 1;
+		gridbag.setConstraints(middleLeft, c);
+		left.add(middleLeft);
 
-		 /*
+		/*
 		JInternalFrame bottomLeft = newFrame(2,FORE_COLOR);
 		bottomLeft.setLayout(new FlowLayout());
 		bottomLeft.setMinimumSize(new Dimension(300,40));
@@ -617,72 +625,72 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		c.weighty = 0;
 		gridbag.setConstraints(bottomLeft, c);
 		left.add(bottomLeft);
-		  */
-		 ///////////////////////////////////////
+		 */
+		///////////////////////////////////////
 
-		 /////////////////////////////////////
-		 JInternalFrame topMiddle = newFrame(2,FORE_COLOR);
-		 topMiddle.setLayout(new GridLayout(1,3));
-		 //topMiddle.setLayout(new FlowLayout());
-		 topMiddle.setMinimumSize(new Dimension(300,40));
-		 c.gridwidth = GridBagConstraints.REMAINDER; //end row
-		 //c2.gridheight = GridBagConstraints.RELATIVE;
-		 c.weightx = 1;
-		 c.weighty = 0;
-		 gridbag.setConstraints(topMiddle, c);
-		 middle.add(topMiddle);
-		 topMiddle.add(listTrains);
-		 topMiddle.add(listStops);
-		 topMiddle.add(listRoute);
-		 topMiddle.add(testSystem);
+		/////////////////////////////////////
+		JInternalFrame topMiddle = newFrame(2,FORE_COLOR);
+		topMiddle.setLayout(new GridLayout(1,3));
+		//topMiddle.setLayout(new FlowLayout());
+		topMiddle.setMinimumSize(new Dimension(300,40));
+		c.gridwidth = GridBagConstraints.REMAINDER; //end row
+		//c2.gridheight = GridBagConstraints.RELATIVE;
+		c.weightx = 1;
+		c.weighty = 0;
+		gridbag.setConstraints(topMiddle, c);
+		middle.add(topMiddle);
+		topMiddle.add(listTrains);
+		topMiddle.add(listStops);
+		topMiddle.add(listRoute);
+		topMiddle.add(testSystem);
 
-		 JInternalFrame bottomMiddle = newFrame();
-		 //middleLeft.setBackground(new Color(255,255,255));
-		 bottomMiddle.setLayout(new GridLayout(2,1));
-		 bottomMiddle.setMinimumSize(new Dimension(300,400));
-		 //middleLeft.setMinimumSize(new Dimension(100,100));
-		 c.gridwidth = GridBagConstraints.REMAINDER; //end row
-		 //c2.gridheight = GridBagConstraints.RELATIVE;
-		 c.weighty = 0.5;
-		 gridbag.setConstraints(bottomMiddle, c);
-		 middle.add(bottomMiddle);
-		 ///////////////////////////////////////
+		JInternalFrame bottomMiddle = newFrame();
+		//middleLeft.setBackground(new Color(255,255,255));
+		bottomMiddle.setLayout(new GridLayout(2,1));
+		bottomMiddle.setMinimumSize(new Dimension(300,400));
+		//middleLeft.setMinimumSize(new Dimension(100,100));
+		c.gridwidth = GridBagConstraints.REMAINDER; //end row
+		//c2.gridheight = GridBagConstraints.RELATIVE;
+		c.weighty = 0.5;
+		gridbag.setConstraints(bottomMiddle, c);
+		middle.add(bottomMiddle);
+		///////////////////////////////////////
 
-		 /**
-		  * Left JFrame
-		  * **/
-		 // Add test system button
-		 //topLeft.add(testSystem);
-		 // Add the map
-		 createMap();
-		 middleLeft.add(imageLabel);
+		/**
+		 * Left JFrame
+		 * **/
+		// Add test system button
+		//topLeft.add(testSystem);
+		// Add the map
+		createMap();
+		middleLeft.add(imageLabel);
 
-		 //add to right jframe
-		 createTable(bottomMiddle);
-		 right3.add(plannerControls);
-		 createStopsTable(right3);
-		 right1.add(orderedList);
+		//add to right jframe
+		createTable(bottomMiddle);
+		right3.add(plannerControls);
+		createStopsTable(right3);
+		right1.add(orderedList);
 
-		 stopTableControls.add(addStop);
-		 stopTableControls.add(selectStop);
-		 stopTableControls.add(removeStop);
-		 right4.add(calcRoute);
-		 right5.add(earliestDep);
-		 right5.add(fewestTrans);
-		 right5.add(earliestArr);
+		stopTableControls.add(addStop);
+		stopTableControls.add(selectStop);
+		stopTableControls.add(removeStop);
+		right4.add(calcRoute);
+		right5.add(earliestDep);
+		right5.add(fewestTrans);
+		right5.add(earliestArr);
 
-		 lastLeft.add(depBox);
-		 lastLeft.add(depFrame);
-		 depFrame.add(pickDep);
-		 lastRight.add(arrBox);
-		 lastRight.add(arrFrame);
-		 arrFrame.add(pickArr);
+		lastLeft.add(depBox);
+		lastLeft.add(depFrame);
+		depFrame.add(pickDep);
+		lastRight.add(arrBox);
+		lastRight.add(arrFrame);
+		arrFrame.add(pickArr);
 
-		 bottomMiddle.add(right);
+		bottomMiddle.add(right);
 
-		 //pack the frames neatly		
-		 frame.pack();
-		 //frame.setSize(1920,1080);
+		//pack the frames neatly		
+		frame.pack();
+		//frame.setSize(1920,1080);
 	}
 
 	/**
@@ -814,11 +822,11 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 				for (int t = 0; t < trains.size(); t++) {
 					Train train = trains.get(t);
 					String nextString = train.getTrainPredictions().get(0).getName();
-					
-					
-					
+
+
+
 					int timeLeft = train.getTrainPredictions().get(0).getTime();
-					
+
 					if (currentViewState == ViewState.VIEW_TRAINS) {
 						Object[] row = new Object[3];
 						row[0] = nextString;
@@ -862,9 +870,9 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 
 			for (int s = 0; s < results.size(); s++) {
 				int stopID = results.get(s);
-				
+
 				String stopName = TripPlanner.getStopNameByID(stopID);
-				Object[] row = { stopName, (instructions.contains(s) ? instructions.get(s) : "") };
+				Object[] row = { stopName, (s < instructions.size() ? instructions.get(s) : "") };
 				data[s] = row;
 				rowColors.add(lineToColor(TripPlanner.getStopByID(stopID).Line));
 			}
@@ -1033,7 +1041,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		Stop next = TripPlanner.getStopByName(nextStop);
 		Stop destination = TripPlanner.getStopByName(dest);
 		String lastStop = getLastStop(next,destination);
-		Stop last =  TripPlanner.getStopByName(lastStop);
+		Stop last = TripPlanner.getStopByName(lastStop);
 		//System.out.println(a + " " + b + " " + lastStop);
 
 		// Next stop position
@@ -1110,7 +1118,7 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 			g.fillOval(x+CIRCLE_DIFF, y+CIRCLE_DIFF, OUTER_CIRCLE_SIZE, OUTER_CIRCLE_SIZE);
 			g.setColor(new Color(255,255,0));
 			g.fillOval(x, y, INNER_CIRCLE_SIZE, INNER_CIRCLE_SIZE);
-			
+
 		}
 
 		trainMap.put(t,new Point(x,y));
@@ -1118,51 +1126,64 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 		imageLabel.repaint();
 	}
 
-	public static void createInstructions(LinkedList<Integer> path, int size, LinkedList<String> instructions){
+	// Creates instructions for a given path
+	public static void createInstructions(LinkedList<Integer> pathList, int size, LinkedList<String> instructions) {
+		LinkedList<Integer> path = new LinkedList<Integer>();
+		path.addAll(pathList);
+
 		if (!path.isEmpty()) {
 			String firstStop = TripPlanner.getStopNameByID(path.get(0));
 			String lastStop = TripPlanner.getStopNameByID(path.getLast());
 			TripPlanner.Direction direction = TripPlanner.getDirection(firstStop, lastStop);
-			Train nearestTrain = TripPlanner.getTrainAtStop(firstStop, direction);
+			Train nearestTrain = TripPlanner.getTrainAtStop(firstStop, direction, timeOffset);
 
 			int sec = 0;
 			int min = 0;
 
 			if (nearestTrain != null) {
-				sec = nearestTrain.getPredictionByName(firstStop).getTime();
-				min = sec/60;
-				sec %= 60;
+				sec = DateTime.secondsLeft(nearestTrain, firstStop);
+				min = DateTime.minutesLeft(nearestTrain, firstStop);
 			}
 
-			if(nearestTrain == null) {
-				System.out.println("Nearest train is null");
-				instructions.add("");
-				//createInstructions(TrainGraph.findTransfer(path), size, instructions);
+			if(nearestTrain == null && path.size() == 1) {
+				String stopName = TripPlanner.getStopNameByID(path.get(0));
+				instructions.add("Arrive at "
+						+ lastStop + ".");
 			}
-			else if (path.size() == 1) {
-				instructions.add((size - path.size()+1) + ". Arrive at "
-						+ lastStop + " at " + min+":"+sec + ".");
+			else if (nearestTrain == null) {
+				instructions.add("There are no approaching trains.");
 			}
 			else if (path.size() == size) {
-				instructions.add("1. Go to "+firstStop+" and take the train that arrives in "+
-						min+":"+sec+" to "+lastStop+".");
-				createInstructions(TrainGraph.findTransfer(path), size, instructions);
+				instructions.add("Go to " + firstStop + 
+						" and take the train that arrives in "+
+						min+":"+sec+ " to " + lastStop + ".");
+				path.pop();
+				createInstructions(path, size, instructions);
+			}
+			else if (TrainGraph.isTransfer(nearestTrain, path)) {
+				String stopName = TripPlanner.getStopNameByID(path.get(0));
+				String line = TripPlanner.getStopByID(path.get(1)).Line;
+
+				instructions.add("Get off at "+stopName+".");
+				instructions.add("Transfer to the "+line+" line and take the train at "
+						+DateTime.arrivesAt(nearestTrain, stopName)+".");
+				path.pop();
+				createInstructions(path, size, instructions);
 			}
 			else {
-				instructions.add((size - path.size()+1) + ". Switch Lines at "
-						+ firstStop + " and get on a train in " + 
-						min+":"+sec + " going to " + lastStop);
-				createInstructions(TrainGraph.findTransfer(path), size, instructions);
+				instructions.add("");
+				path.pop();
+				createInstructions(path, size, instructions);
 			}
 		}
 	}
 	public static TripPlanner.Direction getClosestTrain(Train north, Train south, String stopName){
 		if((north != null) && (south !=null)){
-		int northTime = north.getPredictionByName(stopName).getTime();
-		int southTime = south.getPredictionByName(stopName).getTime();
-		if(northTime < southTime) return TripPlanner.Direction.NORTHBOUND;
-		if(southTime < northTime) return TripPlanner.Direction.SOUTHBOUND;
-		else{return TripPlanner.Direction.STATIC;}
+			int northTime = north.getPredictionByName(stopName).getTime();
+			int southTime = south.getPredictionByName(stopName).getTime();
+			if(northTime < southTime) return TripPlanner.Direction.NORTHBOUND;
+			if(southTime < northTime) return TripPlanner.Direction.SOUTHBOUND;
+			else{return TripPlanner.Direction.STATIC;}
 		}
 		else{
 			return TripPlanner.Direction.STATIC;
@@ -1244,7 +1265,6 @@ public class Views implements MouseListener, TableModelListener, MouseMotionList
 	public static void drawTrainPath(LinkedList<Integer> goals, Color c){
 		LinkedList<Stop> path = new LinkedList<Stop>();
 		for (int r : results) {
-			String stopName = TripPlanner.getStopNameByID(r);
 			Stop s = TripPlanner.getStopByID(r);
 			path.add(s);
 		}

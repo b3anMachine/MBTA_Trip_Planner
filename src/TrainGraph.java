@@ -1,6 +1,3 @@
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Stack;
 import java.util.*;
 
 /**
@@ -65,29 +62,49 @@ public class TrainGraph {
 		}
 
 		// No path was found
-		return results; 
+		return results;
 	}
 	
 	//Returns a LinkedList<Integer> that is a path from the first transfer found, to the destination
 	//NF
-	public static LinkedList<Integer> findTransfer(LinkedList<Integer> pathList){
-		if(pathList.isEmpty()){
-			return pathList;
-		}
-		
+	public static void findTransfer(Train train, LinkedList<Integer> pathList, LinkedList<String> instructions){
 		String originLine = TripPlanner.getStopByID(pathList.get(0)).Line;
+		
 		for(int id = 0; id < pathList.size(); id++) {
 			String curLine = TripPlanner.getStopByID(pathList.get(id)).Line;
-			if(!curLine.equals(originLine)){
+			
+			if(!curLine.equals(originLine)) {
+				Stop s = TripPlanner.getStopByID(pathList.get(id));
+				
+				int sec = 0;
+				int min = 0;
+				
+				if (train.containsStop(s.stop_name)) {
+					Views.timeOffset += train.getPredictionByName(s.stop_name).getTime();
+				}
+				
+				if (train != null) {
+					sec = DateTime.secondsLeft(train, s.stop_name);
+					min = DateTime.minutesLeft(train, s.stop_name);
+				}
+				
+				instructions.add("Switch Lines at "	+ TripPlanner.getStopNameByID(pathList.get(0))
+						+ " and get on a train in " + 
+						min+":"+sec + " going to " + train.getTrainDestination());
+				
 				LinkedList<Integer> newList = new LinkedList<Integer>();
 				
 				newList.addAll(pathList.subList(id, pathList.size()-1));
-				
-				return newList;
+			}
+			else {
+				pathList.remove(0);
+				instructions.add("");
 			}
 		}
-		pathList.remove(0);
-		return pathList;
+	}
+	
+	public static boolean isTransfer(Train train, LinkedList<Integer> path) {
+		return TripPlanner.getStopNameByID(path.get(0)).equals(TripPlanner.getStopNameByID(path.get(1)));
 	}
 	
 	// Unordered Search using permutations

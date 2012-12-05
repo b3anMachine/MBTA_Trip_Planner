@@ -393,7 +393,7 @@
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "JFK/UMass",
-		"NextTo": ["44", "42", "38"]
+		"NextTo": ["38", "44", "42"]
 	},
 	{
 		"Line": "Red",
@@ -438,7 +438,7 @@
 		"StartOfLine": "false",
 		"EndOfLine": "false",
 		"stop_name": "JFK/UMass",
-		"NextTo": ["44", "37", "43"]
+		"NextTo": ["43", "37", "44"]
 	},
 	{
 		"Line": "Red",
