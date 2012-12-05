@@ -323,7 +323,12 @@ public abstract class TripPlanner {
 	
 	//gets Stop by ID
 	public static Stop getStopByID(int stopID){		
-		return getStopByName(getStopNameByID(stopID));
+		Stop tempStop = new Stop();
+		for(Stop s : stops){
+			if(s.stopID == stopID)
+				tempStop = s;
+		}
+		return tempStop;
 	}
 	
 	//Returns the train with the smallest time until arrival for the given stopname
