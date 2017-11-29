@@ -8,7 +8,7 @@ Edward Nunez        nunez.ed@husky.neu.edu
 
 Compiling/running program:
 You can compile and run our program by cd'ing into the MBTA-Trip-Planner directory and
-running the following command. Apparently you say that this didn't work last time, but it works for me on the CCIS machines. I couldn't figure out how to reference the Jackson JSON files so I included them in this release. I'm sorry if you have to put this in Eclipse, but I can't spend any more time trying to get this to run via the command line when I know it works on the CCIS machines:
+running the following command:
 javac -classpath .:* src/*.java
 java -cp ./bin:./*:./MBTA_test_data/2012_10_19/* TripPlanner
 
